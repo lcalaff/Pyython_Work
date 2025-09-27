@@ -1,0 +1,184 @@
+---
+title: Lab1 - Gapminder Plots and compuations
+author: Lucas Calaff
+format:
+  html:
+    toc: true
+    code-fold: true
+    embed resources: true
+theme: darkly
+highlight-style: breeze
+jupyter: python3
+---
+
+
+```{python}
+import pandas as pd
+import numpy as np
+import plotnine as p9
+```
+
+<https://github.com/lcalaff/Pyython_Work/tree/main/LAB1>
+
+### Task 1: Using the Q1 Dataset to recreate the visualization shown in Gapminder 
+#### 1. The Variables that we can take note of in this visualization is y values of life expectancy, x value of income, colors of the four regions, and increased size of each circle depending on size of the data point 
+
+```{python}
+q1 = pd.read_csv(r"C:\Users\ldcal\OneDrive\Desktop\Cal Poly Courses\Fall\GSB-S544\Coding Work\Pyython_Work\LAB1\Data\q1data.csv")
+
+
+(p9.ggplot(q1,p9.aes(
+    x="income", 
+    y="life_exp",
+    fill = "four_regions", 
+    size = "population",
+    
+)) 
++p9.theme(figure_size=(8,6))
++ p9.scale_size_area(max_size=25)
+
++p9.scale_x_log10(breaks=[500,1000,2000,4000,8000,16000,32000,64000,100000])
++p9.scale_y_continuous(limits = (30,90),
+ breaks=np.arange(30, 90.1, 10))
++ p9.geom_point(alpha = 0.75)
+)
+```
+
+#### Using a different style of plot to model the q1 data
+
+```{python}
+(p9.ggplot(q1,p9.aes(
+    x="income", 
+    y="life_exp",
+    fill = "four_regions", 
+    size = "population",
+    
+)) 
++p9.theme(figure_size=(8,6))
++ p9.scale_size_area(max_size=25)
+
++p9.scale_x_log10(breaks=[500,1000,2000,4000,8000,16000,32000,64000,100000])
++p9.scale_y_continuous(limits = (30,90),
+ breaks=np.arange(30, 90.1, 10))
+ +p9.geom_bin2d()
+ )
+```
+
+This plot that was used has a lot of simmilar attirbutes and in my opnion does a better job to show the colors and more spesifically 
+the keys of which region is represented. It however doesnt do a greate job to show the population densisties as every rectangle is the
+same size. It also doesnt do a great job at repsenting the overlapping regions with eachother.
+
+### Task 2: Using the q2 dataset in order to visualize and recreate the gapminder figure 
+#### The figure uses data from 1997 with the x values explaining exoprts as a % of GDP and the y values are imports as a % of GDP, size is the population again and the color represent regions.
+
+```{python}
+#used chatGPT to create this function once i noticed that there were values 
+#in the energy column that were instances like 12.2k and made the entire column 
+#a string instead of a float
+
+def convert_k_to_float(value):
+    if isinstance(value, str):
+        if 'k' in value.lower():
+            # Remove 'k' and convert to float, then multiply by 1000
+            return float(value.lower().replace('k', '')) * 1000
+        elif 'm' in value.lower():
+            # Handle 'm' for millions, if needed
+            return float(value.lower().replace('m', '')) * 1000000
+        else:
+            # Handle standard numeric strings
+            return float(value)
+    # Return the value unchanged if it's already a number or NaN
+    return value
+```
+
+```{python}
+q2 = pd.read_csv(r"C:\Users\ldcal\OneDrive\Desktop\Cal Poly Courses\Fall\GSB-S544\Coding Work\Pyython_Work\LAB1\Data\q2data.csv")
+
+q2["energy"] = q2["energy"].apply(convert_k_to_float)
+
+
+
+(p9.ggplot(q2, p9.aes(
+    x= "exports",
+    y= "imports",
+    fill = "four_regions",
+    size = "energy"
+  
+)) +p9.theme(figure_size=(8,6))
+
++ p9.scale_size_area(max_size=20)
+
++p9.scale_x_continuous(limits = (0,220),
+ breaks=np.arange(0, 220.1, 20))
+
++p9.scale_y_continuous(limits = (0,300),
+ breaks=np.arange(0, 300.1, 20))
++ p9.geom_point(alpha = .75))
+```
+
+#### Using another syle of plot to graph q2 data 
+
+```{python}
+(p9.ggplot(q2, p9.aes(
+    x= "exports",
+    y= "imports",
+    fill = "four_regions",
+  
+)) +p9.theme(figure_size=(8,6))
+
++ p9.scale_size_area(max_size=20)
+
++p9.scale_x_continuous(limits = (0,220),
+ breaks=np.arange(0, 220.1, 20))
+
++p9.scale_y_continuous(limits = (0,300),
+ breaks=np.arange(0, 300.1, 20))
++ p9.geom_polygon(alpha = 0.50))
+```
+
+as we can observe in this data we can tell pretty easily that asia has an outlier for the exports and imports, however africa appears to be a little more covered up and not easily identifiable. 
+
+### Task 3: Using the q3 dataset to recreate the visualization that gapminder made
+#### This figure uses data from 2001 with the x variable being individuals who use the internet, and the Y variables being GDP/ capita, the colors a represented by world regions again and the size of each individual dot corresponds to the income of that given region. 
+
+```{python}
+q3 = pd.read_csv(r"C:\Users\ldcal\OneDrive\Desktop\Cal Poly Courses\Fall\GSB-S544\Coding Work\Pyython_Work\LAB1\Data\q3data.csv")
+
+(p9.ggplot(q3, p9.aes(
+    x= "internet_users",
+    y= "gdp",
+    fill = "four_regions",
+    size = "income"
+  
+)) +p9.theme(figure_size=(8,6))
+
++ p9.scale_size_area(max_size=20)
+
++p9.scale_x_continuous(limits = (0,110),
+ breaks=np.arange(0, 110, 10))
+
++p9.scale_y_log10(breaks = [200,500,1000,2000,5000,10000,20000,50000,100000])
++ p9.geom_point(alpha = .75))
+```
+
+#### Using a different style of plot for the q3 data
+
+```{python}
+(p9.ggplot(q3, p9.aes(
+    x= "internet_users",
+    y= "gdp",
+    fill = "four_regions",
+  
+)) +p9.theme(figure_size=(8,6))
+
++ p9.scale_size_area(max_size=20)
+
++p9.scale_x_continuous(limits = (0,110),
+ breaks=np.arange(0, 110, 10))
+
++p9.scale_y_log10(breaks = [200,500,1000,2000,5000,10000,20000,50000,100000])
++ p9.geom_tile(alpha = .75))
+```
+
+An advantage for this graph is that its x values are very precise in terms of who close they are to the actual values in the data. however the gdp shows more of an estimate which can be both a disadvantage and advantage as we could use this to find simmilar regions of data but would be unsure how skewed the results were. 
+
