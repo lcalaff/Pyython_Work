@@ -1,18 +1,19 @@
 ---
-title: Lab1 - Gapminder Plots and compuations
-author: Lucas Calaff
-execute: 
-  enabled: true
+title: "Lab1 - Gapminder Plots and computations"
+author: "Lucas Calaff"
+jupyter: python3
+
 format:
   html:
     toc: true
     code-fold: true
-    embed resources: true
-theme: darkly
-highlight-style: breeze
-jupyter: python3
----
+    theme: darkly            
+    highlight-style: breezedark
+    embed-resources: true    
 
+execute:
+  enabled: true
+---
 
 ```{python}
 import pandas as pd
