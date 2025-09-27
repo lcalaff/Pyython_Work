@@ -1,6 +1,8 @@
 ---
 title: Lab1 - Gapminder Plots and compuations
 author: Lucas Calaff
+execute: 
+  enabled: true
 format:
   html:
     toc: true
