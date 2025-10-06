@@ -13,7 +13,6 @@ execute:
   enabled: true
 ---
 
-
 ```{python}
 import pandas as pd
 import numpy as np 
@@ -22,6 +21,7 @@ from mizani.formatters import percent_format
 ```
 
 ## Step 1: Data set up
+<https://github.com/lcalaff/Pyython_Work/tree/main/LAB%202>
 
 ```{python}
 #importing the dataset to read as a pandas data frame 

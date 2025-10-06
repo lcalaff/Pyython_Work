@@ -2220,7 +2220,7 @@ vertical-align: -.125em;
 </header>
 
 
-<div id="8703cffc" class="cell" data-execution_count="1">
+<div id="9f830533" class="cell" data-execution_count="1">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
@@ -2231,7 +2231,8 @@ vertical-align: -.125em;
 </div>
 <section id="step-1-data-set-up" class="level2">
 <h2 class="anchored" data-anchor-id="step-1-data-set-up">Step 1: Data set up</h2>
-<div id="da1aadb5" class="cell" data-execution_count="2">
+<p><a href="https://github.com/lcalaff/Pyython_Work/tree/main/LAB%202" class="uri">https://github.com/lcalaff/Pyython_Work/tree/main/LAB%202</a></p>
+<div id="d50079c4" class="cell" data-execution_count="2">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">#importing the dataset to read as a pandas data frame </span></span>
@@ -2239,7 +2240,7 @@ vertical-align: -.125em;
 </details>
 </div>
 <p>There are several aspects of our avocado data frame to break down before moving forward with the analysis. The data represents the date of a single observation that took place and was added to our data. The type is a categorical data type which describes if the avocado was organic or conventional. The region is the city or region in which the avocado was sold in. There are different Hass descriptions for avocados which describe the size between small medium (PLU 4046), large (PLU 4225), and extra-large (PLU 4770). Lastly is the Total Volume column which is the total number of avocados sold for that observation.</p>
-<div id="afe25d31" class="cell" data-execution_count="3">
+<div id="73a2411d" class="cell" data-execution_count="3">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">#we need to change PLU VARS names</span></span>
@@ -2250,7 +2251,7 @@ vertical-align: -.125em;
 <span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>                                                  <span class="st">&quot;4770&quot;</span>: <span class="st">&quot;Extra_Large&quot;</span>})</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-<div id="87e62d4e" class="cell" data-execution_count="4">
+<div id="aee4cd5a" class="cell" data-execution_count="4">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Geographical names need to be sorted based on things such as cities, states, regions, US</span></span>
@@ -2326,14 +2327,14 @@ vertical-align: -.125em;
 <h2 class="anchored" data-anchor-id="exercises">Exercises</h2>
 <section id="which-major-geographical-region-sold-the-most-total-organic-small-hass-avocados-in-2017" class="level3">
 <h3 class="anchored" data-anchor-id="which-major-geographical-region-sold-the-most-total-organic-small-hass-avocados-in-2017">3. Which major geographical region sold the most total organic small Hass avocados in 2017?</h3>
-<div id="21062293" class="cell" data-execution_count="5">
+<div id="bd774807" class="cell" data-execution_count="5">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>regions_2017 <span class="op">=</span> cleaned_avocado[(cleaned_avocado[<span class="st">&quot;year&quot;</span>]<span class="op">==</span> <span class="dv">2017</span>) <span class="op">&amp;</span> (cleaned_avocado[<span class="st">&quot;Region&quot;</span>] <span class="op">==</span> <span class="dv">1</span>) </span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>                                <span class="op">&amp;</span> (cleaned_avocado[<span class="st">&quot;type&quot;</span>] <span class="op">==</span><span class="st">&quot;organic&quot;</span>)]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-<div id="51375331" class="cell" data-execution_count="6">
+<div id="8ec2cbf6" class="cell" data-execution_count="6">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>Most_by_region <span class="op">=</span> regions_2017.groupby(<span class="st">&quot;geography&quot;</span>)[<span class="st">&quot;Small_Medium&quot;</span>].<span class="bu">sum</span>()</span>
@@ -2352,7 +2353,7 @@ vertical-align: -.125em;
 <h3 class="anchored" data-anchor-id="splitting-the-date-variables-into-month-day-year-vars.">4. Splitting the date variables into month, day, year vars.</h3>
 <section id="computing-which-month-has-the-highest-average-volume-of-avocado-sales" class="level4">
 <h4 class="anchored" data-anchor-id="computing-which-month-has-the-highest-average-volume-of-avocado-sales">Computing which month has the highest average volume of avocado sales?</h4>
-<div id="19ef4126" class="cell" data-execution_count="7">
+<div id="5025c8d1" class="cell" data-execution_count="7">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co">#year column is already in this dataset </span></span>
@@ -2364,7 +2365,7 @@ vertical-align: -.125em;
 <span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>cleaned_avocado[<span class="st">&quot;Day&quot;</span>] <span class="op">=</span> cleaned_avocado[<span class="st">&quot;Cleaned Date&quot;</span>].dt.day</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-<div id="203a5bae" class="cell" data-execution_count="8">
+<div id="92490d16" class="cell" data-execution_count="8">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>vol_month <span class="op">=</span> cleaned_avocado[[<span class="st">&quot;Month_Name&quot;</span>, <span class="st">&quot;total_volume&quot;</span>]].groupby(<span class="st">&quot;Month_Name&quot;</span>).mean()</span>
@@ -2380,7 +2381,7 @@ vertical-align: -.125em;
 </section>
 <section id="which-metro-area-georaphical-locations-sold-the-most-total-avocados" class="level3">
 <h3 class="anchored" data-anchor-id="which-metro-area-georaphical-locations-sold-the-most-total-avocados">5. Which metro area georaphical locations sold the most total avocados?</h3>
-<div id="29f59a11" class="cell" data-execution_count="9">
+<div id="e6120316" class="cell" data-execution_count="9">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>metro <span class="op">=</span> cleaned_avocado[[<span class="st">&quot;Region&quot;</span>, <span class="st">&quot;geography&quot;</span>, <span class="st">&quot;total_volume&quot;</span>]].groupby(<span class="st">&quot;geography&quot;</span>).mean()</span>
@@ -2394,7 +2395,7 @@ vertical-align: -.125em;
 </div>
 <section id="ploting-box-plots-of-the-top-5-regions-in-average-total-volume-of-avocados" class="level4">
 <h4 class="anchored" data-anchor-id="ploting-box-plots-of-the-top-5-regions-in-average-total-volume-of-avocados">ploting box plots of the top 5 regions in average total volume of avocados</h4>
-<div id="86b0215f" class="cell" data-execution_count="10">
+<div id="c3c2861b" class="cell" data-execution_count="10">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>top5 <span class="op">=</span> (only_regions.sort_values(by <span class="op">=</span> [<span class="st">&quot;total_volume&quot;</span>], ascending<span class="op">=</span><span class="va">False</span>).head(<span class="dv">5</span>).reset_index())</span>
@@ -2415,7 +2416,7 @@ vertical-align: -.125em;
 </section>
 <section id="create-a-cleaned-data-set-with-only-particular-california-regions" class="level3">
 <h3 class="anchored" data-anchor-id="create-a-cleaned-data-set-with-only-particular-california-regions">6. Create a cleaned data set with only particular California Regions</h3>
-<div id="688e16d5" class="cell" data-execution_count="11">
+<div id="139969fd" class="cell" data-execution_count="11">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>cali_cities<span class="op">=</span> cleaned_avocado[(cleaned_avocado[<span class="st">&quot;geography&quot;</span>] <span class="op">==</span> <span class="st">&quot;Los Angeles&quot;</span>) <span class="op">|</span> (cleaned_avocado[<span class="st">&quot;geography&quot;</span>] <span class="op">==</span> <span class="st">&quot;San Diego&quot;</span>) <span class="op">|+</span></span>
@@ -2425,7 +2426,7 @@ vertical-align: -.125em;
 </section>
 <section id="in-which-california-regions-is-the-price-of-organic-vs-convetrional-avocados-most-different" class="level3">
 <h3 class="anchored" data-anchor-id="in-which-california-regions-is-the-price-of-organic-vs-convetrional-avocados-most-different">7. in which california regions is the price of organic vs convetrional avocados most different?</h3>
-<div id="11472993" class="cell" data-execution_count="12">
+<div id="6769dd6d" class="cell" data-execution_count="12">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>group_city <span class="op">=</span> cali_cities.groupby([<span class="st">&quot;type&quot;</span>, <span class="st">&quot;geography&quot;</span>])[<span class="st">&quot;average_price&quot;</span>].mean().unstack(<span class="st">&quot;type&quot;</span>).reset_index()</span>
@@ -2443,7 +2444,7 @@ diff                 0.718954
 dtype: object</code></pre>
 </div>
 </div>
-<div id="801fc538" class="cell" data-execution_count="13">
+<div id="0ceab2ae" class="cell" data-execution_count="13">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>(p9.ggplot(group_city, p9.aes(x <span class="op">=</span> <span class="st">&quot;geography&quot;</span>, </span>
@@ -2462,7 +2463,7 @@ dtype: object</code></pre>
 </section>
 <section id="recreate-the-plot-shown-in-the-lab-example" class="level3">
 <h3 class="anchored" data-anchor-id="recreate-the-plot-shown-in-the-lab-example">8. Recreate the plot shown in the lab example</h3>
-<div id="2fde2fa9" class="cell" data-execution_count="14">
+<div id="7b5a6e35" class="cell" data-execution_count="14">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>size_4_cities <span class="op">=</span> cali_cities[[<span class="st">&quot;type&quot;</span>, <span class="st">&quot;Small_Medium&quot;</span>, <span class="st">&quot;Large&quot;</span>, <span class="st">&quot;Extra_Large&quot;</span>, <span class="st">&quot;geography&quot;</span>]]</span>
@@ -2495,7 +2496,7 @@ dtype: object</code></pre>
 <span id="cb18-28"><a href="#cb18-28" aria-hidden="true" tabindex="-1"></a><span class="bu">long</span>[<span class="st">&quot;type&quot;</span>] <span class="op">=</span> pd.Categorical(<span class="bu">long</span>[<span class="st">&quot;type&quot;</span>], [<span class="st">&quot;conventional&quot;</span>, <span class="st">&quot;organic&quot;</span>], ordered<span class="op">=</span><span class="va">True</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-<div id="e7cca8e2" class="cell" data-execution_count="15">
+<div id="89249b7a" class="cell" data-execution_count="15">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>(p9.ggplot(<span class="bu">long</span>, p9.aes(x<span class="op">=</span><span class="st">&quot;geography&quot;</span>, </span>
@@ -2524,7 +2525,7 @@ dtype: object</code></pre>
 <section id="using-outside-data" class="level2">
 <h2 class="anchored" data-anchor-id="using-outside-data">Using outside data</h2>
 <p><a href="https://www.kaggle.com/datasets/paultimothymooney/zillow-house-price-data" class="uri">https://www.kaggle.com/datasets/paultimothymooney/zillow-house-price-data</a></p>
-<div id="a88f9ae1" class="cell" data-execution_count="16">
+<div id="c8a23492" class="cell" data-execution_count="16">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>housing <span class="op">=</span> pd.read_csv(<span class="vs">r&quot;C:</span><span class="er">\</span><span class="vs">Users</span><span class="er">\</span><span class="vs">ldcal</span><span class="er">\</span><span class="vs">OneDrive</span><span class="dv">\D</span><span class="vs">esktop</span><span class="er">\</span><span class="vs">Cal Poly Courses</span><span class="er">\</span><span class="vs">Fall</span><span class="dv">\G</span><span class="vs">SB-S544</span><span class="er">\</span><span class="vs">Coding Work</span><span class="er">\</span><span class="vs">Pyython_Work</span><span class="er">\</span><span class="vs">LAB 2</span><span class="er">\</span><span class="vs">City_MedianRentalPrice_1Bedroom</span><span class="dv">.</span><span class="vs">csv&quot;</span>)</span>
@@ -2541,25 +2542,25 @@ dtype: object</code></pre>
 <span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a>neat[<span class="st">&quot;geography&quot;</span>] <span class="op">=</span> neat[<span class="st">&quot;RegionName&quot;</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-stderr">
-<pre><code>C:\Users\ldcal\AppData\Local\Temp\ipykernel_10488\2883206396.py:9: SettingWithCopyWarning: 
+<pre><code>C:\Users\ldcal\AppData\Local\Temp\ipykernel_43440\2883206396.py:9: SettingWithCopyWarning: 
 A value is trying to be set on a copy of a slice from a DataFrame.
 Try using .loc[row_indexer,col_indexer] = value instead
 
 See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
-C:\Users\ldcal\AppData\Local\Temp\ipykernel_10488\2883206396.py:12: SettingWithCopyWarning: 
+C:\Users\ldcal\AppData\Local\Temp\ipykernel_43440\2883206396.py:12: SettingWithCopyWarning: 
 A value is trying to be set on a copy of a slice from a DataFrame.
 Try using .loc[row_indexer,col_indexer] = value instead
 
 See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy</code></pre>
 </div>
 </div>
-<div id="f673ea7e" class="cell" data-execution_count="17">
+<div id="cbe19667" class="cell" data-execution_count="17">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>joined <span class="op">=</span> cali_cities.merge(neat)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-<div id="7f85447d" class="cell" data-execution_count="18">
+<div id="334b3c9c" class="cell" data-execution_count="18">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>(p9.ggplot(joined, p9.aes(x <span class="op">=</span><span class="st">&quot;avg_H_price&quot;</span>, </span>
