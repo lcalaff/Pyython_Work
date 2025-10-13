@@ -1,0 +1,313 @@
+---
+title: LAB 3 Signing a Song
+author: Lucas Calaff
+jupyter: python3
+format:
+  html:
+    toc: true
+    code-fold: true
+    theme: Darkly
+    highlight-style: breezedark
+    embed-resources: true
+execute:
+  enabled: true
+---
+
+<>
+
+## Description 
+
+Throughout this lab we will be using a dataset that is based on the 12 days of christmas song 
+and writing functions that will allow for the coding output to be able to sing the song and clean
+the dataset so that it is presented neatly.
+
+```{python}
+import pandas as pd
+from num2words import num2words as n2
+```
+
+## Datasets
+
+```{python}
+xmas = pd.read_csv("https://www.dropbox.com/scl/fi/qxaslqqp5p08i1650rpc4/xmas.csv?rlkey=erdxi7jbh7pqf9fh4lv4cayp5&dl=1")
+xmas2 = pd.read_csv("https://www.dropbox.com/scl/fi/p9x9k8xwuzs9rhp582vfy/xmas_2.csv?rlkey=kvc3j3lmyn4opcidsrhcmrof1&dl=1")
+```
+
+## Practice Functions 
+
+```{python}
+def sing_day_1 (df):
+    new_d = df.iloc[0]
+
+    print(f"On the {new_d['Day.in.Words']} Day of Christmas my true love gave to me: ")
+    print(f" a {new_d['Gift.Item']} in a {new_d['Location']}")
+    return(None)
+```
+
+```{python}
+sing_day_1(xmas)
+```
+
+```{python}
+def sing_day_3 (df):
+    new_df2 = df
+    
+    print(f"on the {new_df2.at[2,'Day.in.Words']} day of christmas my true love gave to me: ")
+    print(f"{new_df2.at[2,'Day']} {new_df2.at[2,'Adjective']} {new_df2.at[2, 'Gift.Item']}'s")
+    print(f"{new_df2.at[1,'Day']} {new_df2.at[1,'Adjective']} {new_df2.at[1,'Gift.Item']}'s")
+    print(f"and a {new_df2.at[0, 'Gift.Item']} in a {new_df2.at[0,'Location']}")
+    return(None)
+```
+
+```{python}
+sing_day_3(xmas)
+```
+
+## Function 1: pluralize gift 
+
+This intital function i misinterpreted the question and made a function that takes the spesific dataframe we are
+using are returns the gifts pluraized
+
+```{python}
+def pluralize_gift_data(df):
+
+    mask = df["Day"].between(2, 5)
+
+    gift = df.loc[mask, "Gift.Item"].astype(str).str.rstrip()
+    df.loc[mask, "Gift.Item"] = gift.where(gift.str.endswith("s"), gift + "s")
+
+    mask2 = df["Day"] == 6
+    df.loc[mask2, "Gift.Item"] = "Geese"
+
+    mask3 = df["Day"].between(7,8)
+
+    gift2 = df.loc[mask3, "Gift.Item"].astype(str).str.rstrip()
+    df.loc[mask3, "Gift.Item"] = gift2.where(gift2.str.endswith("s"), gift2 + "s")
+
+    mask4 = df["Day"] == 9
+    df.loc[mask4, "Gift.Item"] = "Ladies"
+
+    mask5 = df["Day"].between(10,12)
+
+    gift3 = df.loc[mask5, "Gift.Item"].astype(str).str.rstrip()
+    df.loc[mask5, "Gift.Item"] = gift3.where(gift3.str.endswith("s"), gift3 + "s")
+    return df
+```
+
+```{python}
+def pluralize_gift(gift):
+  """
+  Returns plural of a noun
+  
+  Parameters
+  ----------
+  gift: str
+    A noun or A Pandas Column
+    
+  Return
+  ------
+  str
+    Plural version
+  """
+  if isinstance(gift, pd.Series):
+    word = pd.Series(gift).astype(str).str.strip()
+    out = word + "s"
+    out = out.mask(word.eq("partridge"), "partridge")
+    out = out.mask(word.eq("goose"), "geese")
+    out = out.mask(word.eq("lady"), "ladies")
+    return(out)
+
+  g = str(gift).strip()
+  if g == "goose":
+    return "geese"
+  elif g == "lady":
+    return "ladies"
+  else: 
+    return g + "s"
+      
+```
+
+```{python}
+# Should work
+pluralize_gift("goose")
+
+# Will work if your function is vectorized! 
+pluralize_gift(xmas['Gift.Item'])
+```
+
+## Function 2: make phrase
+
+```{python}
+def make_phrase(num, num_word, item, verb, adjective, location):
+  """
+
+  This function takes a numer of different attiributes and turns it into a phrase. 
+
+  The structure of this function is mostly to be able to sing the twelve days of 
+  christmas but can be used with anything provided the proper syntax. 
+
+  Parameters
+  ----------
+  num = an interger value 
+
+  num_word = the numer in its string value (ie. one, two, ...)
+
+  item = any object as a string (ie. lego, toy, ...)
+
+  verb = a string that is a verb (ie. run, sing, speak, ...)
+
+  Adjective = a string that is an adjective (ie. Brave, Tough, ...)
+
+  Location = a string that is a place (ie, park, house, ...)
+
+  Returns
+  -------
+  Phrase 
+    a string a values that gramatically go together without any whitespace
+  """
+  
+  ## Step 1: Replace NAs with blank strings
+  if isinstance(verb, pd.Series) & isinstance(adjective, pd.Series):
+      verb = verb.fillna("")
+      adjective = adjective.fillna("")
+      
+  
+  ## Step 2: If the day number is larger than 1, the gift items need pluralized!
+  ### Hint: call the function you created above!
+  
+  if num >1: 
+      specific_item = pluralize_gift(item)
+  else:
+      specific_item = item
+
+  
+  ## Step 3: Figure out if a gift item starts with a vowel
+  vowels = set("aeiouAEIOU")
+
+  if isinstance(specific_item, pd.Series):
+    s = specific_item.astype(str).str.strip()
+    
+    first_char = s.str[0].fillna("")
+    vowel_TF = first_char.isin(vowels)         
+  else:
+    s = str(specific_item).strip()
+    vowel_TF = bool(s) and s[0] in vowels
+  
+  ## Step 4: For the first day, if the gift item starts with a vowel, 
+  # replace the day with "an" and if the gift item does not start with a vowel,
+  # replace the day with "a" (e.g. a partridge in a pear tree).
+  # If it is not the first day, use just the number word (e.g. ten lords a leap)
+  
+  if (num ==1) & (vowel_TF):
+    num_word = "an"
+  elif (num==1) & (not vowel_TF):
+    num_word = "a"
+  else:
+    num_word = n2(num)
+
+  ## Error catching 
+  num_word    = "" if pd.isna(num_word)    else str(num_word).strip()
+  adjective   = "" if pd.isna(adjective)   else str(adjective).strip()
+  specific_item = "" if pd.isna(specific_item) else str(specific_item).strip()
+  verb        = "" if pd.isna(verb)        else str(verb).strip()
+  location    = "" if pd.isna(location)    else str(location).strip()
+
+  ## Step 6: Put all of the pieces together into one string and return!
+
+  if num ==1:
+    phrase = num_word +" "+ specific_item +" "+ location
+    phrase = " ".join(phrase.split())
+    return(phrase)
+  else:
+    phrase = num_word +" "+  adjective +" "+ specific_item +" "+ verb +" "+ location
+    phrase = " ".join(phrase.split())
+    return (phrase)
+```
+
+```{python}
+xmas["Full.Phrase"] = xmas.apply(
+    lambda r: make_phrase(r["Day"], r["Day.in.Words"], r["Gift.Item"],
+                          r["Verb"], r["Adjective"], r["Location"]),
+    axis=1
+)
+```
+
+## Function 3: sing day
+
+```{python}
+def sing_day(dataset, days_col, num, phrase_col):
+  """
+  This Function is used to sing out a set of values and phrase provided by previous functions and 
+  numer imputs. 
+
+  Parameters
+  ----------
+  dataset: is a pandas dataset that we will use to extract information from 
+
+  day_col: name of the dolumn that you will collect numbered days from to sing the song (ie. first, second, third)
+
+  num: the number of lines you are going to iterate through 
+
+  phrase_col: a string that you want to add onto your values provided 
+
+  Returns
+  -------
+   This function will return a string with many lines that should be formatted gramatically to fit 
+   a song. 
+  """
+  
+  indx = num-1
+
+  # Step 1: Setup the intro line
+  num_word = dataset.at[indx, days_col]   # convert "1" to "first" etc.
+  intro = "On the " + num_word + " day of Christmas, my true love sent to me:"
+  
+  # Step 2: Sing the gift phrases
+  # Hint: What order are they gifts sung in each day?
+  gifts = ""
+  
+  if num == 1: 
+      gifts = gifts +"\n" + dataset.at[indx, phrase_col] + "."
+  else: 
+    for i in range(num-1, -1, -1):
+      if i == (num-1):
+        gifts = gifts + "\n" + dataset.at[i,phrase_col]
+      elif i == 0: 
+        gifts = gifts + ","+ "\nand " + dataset.at[i, phrase_col] + "!!!"
+      else:
+        gifts = gifts + "," + "\n" + dataset.at[i,phrase_col]
+
+  # Step 3: Put it all together and return
+  return(intro + gifts)
+```
+
+### sing day function using the 12 days of christmas
+
+```{python}
+lines = xmas.apply(
+    lambda r: sing_day(xmas, "Day.in.Words", r["Day"], 
+                                       "Full.Phrase"), 
+    axis=1
+)
+
+print("\n\n".join(lines))
+```
+
+### sing day function using the 12 days at calpoly dataset 
+
+```{python}
+#testing with a new dataframe
+xmas2["Full.Phrase"] = xmas2.apply(
+    lambda r: make_phrase(r["Day"], r["Day.in.Words"], r["Gift.Item"],
+                          r["Verb"], r["Adjective"], r["Location"]),
+    axis=1
+)
+
+lines2 = xmas2.apply(
+    lambda r: sing_day(xmas2, "Day.in.Words", r["Day"], 
+                                        "Full.Phrase"), 
+    axis=1
+)
+print("\n\n".join(lines2))
+```
+
