@@ -3,7 +3,7 @@ title: XML, HTML, and Web Scraping
 jupyter: python3
 ---
 
-<>
+<https://github.com/lcalaff/Pyython_Work>
 
 
 JSON and XML are two different ways to represent hierarchical data. Which one is better? There are lots of articles online which discuss similarities and differences between JSON and XML and their advantages and disadvantages. Both formats are still in current usage, so it is good to be familiar with both. However, JSON is more common, so we'll focus on working with JSON representations of hierarchical data.
