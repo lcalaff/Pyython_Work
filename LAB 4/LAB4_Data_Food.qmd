@@ -1,0 +1,253 @@
+---
+title: 'LAB 4: Data is Delicious'
+author: Lucas Calaff
+jupyter: python3
+format:
+  html:
+    toc: true
+    code-fold: true
+    theme: Darkly
+    highlight-style: breezedark
+    embed-resources: true
+execute:
+  enabled: true
+---
+
+<>
+
+```{python}
+import requests 
+import pandas as pd
+from bs4 import BeautifulSoup
+import re
+import plotnine as p9
+import base64
+```
+
+## 1: Data From unstructured websites 
+
+```{python}
+URL = "https://tastesbetterfromscratch.com/meal-plan-173-2/"
+```
+
+```{python}
+HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
+
+response = requests.get(URL, headers = HEADERS)
+soup = BeautifulSoup(response.content, "html.parser")
+```
+
+```{python}
+Shopping_list = soup.find_all("div", 
+                            attrs={
+                            "class": 
+                            "wp-block-group__inner-container is-layout-flow wp-block-group-is-layout-flow"})
+
+shop = Shopping_list[0]
+```
+
+```{python}
+meal_plan = []
+
+for val in shop.find_all("p"):
+    
+    #finding the days of the week that are in this meal plan 
+    day_tag = val.find("strong")
+    day = day_tag.get_text(strip=True)
+    #found that their was some days that ended in : so added regex to detect this and 
+    #remvoe the :
+    day_C = re.sub(r":$", '', day)
+    
+    meal_name_tag = val.find("a")
+    meal_name = meal_name_tag.get_text(strip=True)
+
+    link_tag = val.find("a")
+    link = link_tag.get("href")
+
+    price_tag = val.get_text()
+    price = re.search(r"(?<=\$)\d+\.\d{2}", price_tag) 
+    price = "$" + price.group(0)
+
+    meal_plan.append({
+        "Day of the Week": day_C,
+        "Name of Recipe" : meal_name, 
+        "Link to Recipe" : link,
+        "Price of Recipe": price
+    })
+
+meal_plan
+```
+
+## 2: Data from an API
+
+```{python}
+recipe = next((r["Name of Recipe"] for r in meal_plan 
+                if r.get("Day of the Week", "") == "Monday"), 
+                None)
+recipe
+```
+
+```{python}
+with open("API.txt", "r", encoding="utf-8") as f:
+    text = f.read()
+```
+
+```{python}
+# tasty api code in order to match our monday recipe with their database 
+
+url = "https://tasty.p.rapidapi.com/recipes/list"
+
+querystring = {"from":"0","size":"100","q":recipe}
+
+headers = {
+	"x-rapidapi-key": text,
+	"x-rapidapi-host": "tasty.p.rapidapi.com"
+}
+
+response2 = requests.get(url, headers=headers, params=querystring)
+
+print(response2.json())
+```
+
+```{python}
+api_recipies = pd.json_normalize(response2.json(), "results")
+api_recipies["name"]
+```
+
+## 3: automation 
+
+```{python}
+#soup = BeautifulSoup(response.content, "html.parser")
+
+def get_meal_plan_data(num):
+    """
+    The following function is used to connect a meal plan and find simmilar recipies using the tasty api
+
+    Parameters
+    ----------
+
+    num: assosiated with the meal plan number on the tasts better from scratch website 
+
+    Returns
+    -------
+    Recipe_Data: a pandas data frame that connects the meal on monday with the closest results
+    from the tasty api website
+    """
+
+    #Step 1:
+    #importing the websites html into our python serve to webscape 
+    Starting_link = "https://tastesbetterfromscratch.com/meal-plan-" + str(num)
+    setup = requests.get(Starting_link, headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"})
+    good_soup = BeautifulSoup(setup.content, "html.parser")
+
+    Shopping_list = good_soup.find_all("div", attrs = {"class": "entry-content"})
+    web = Shopping_list[0]
+
+    #step 2:
+    
+    meal_plan = []
+
+    for val in web.find_all("p", attrs = {"class": "has-text-align-left"}):
+    
+        #finding the days of the week that are in this meal plan 
+        day_tag = val.find("strong")
+        day = day_tag.get_text(strip=True)
+        #found that their was some days that ended in : so added regex to detect this and 
+        #remvoe the :
+        day_C = re.sub(r":$", '', day)
+    
+        meal_name_tag = val.find("a")
+        meal_name = meal_name_tag.get_text(strip=True)
+
+        link_tag = val.find("a")
+        link = link_tag.get("href")
+
+        price_tag = val.get_text()
+        price = re.search(r"(?<=\$)\d+\.\d{2}", price_tag) 
+        price = "$" + price.group(0)
+
+        meal_plan.append({
+            "Day of the Week": day_C,
+            "Name of Recipe" : meal_name, 
+            "Link to Recipe" : link,
+            "Price of Recipe": price
+        })    
+
+    #step 3: 
+    recipe = next((r["Name of Recipe"] for r in meal_plan 
+                if r.get("Day of the Week", "") == "Monday"), 
+                None)
+
+
+    #step 4: 
+    url = "https://tasty.p.rapidapi.com/recipes/list"
+
+    querystring = {"from":"0","size":"100","q":recipe}
+
+    headers = {
+	"x-rapidapi-key": text,
+	"x-rapidapi-host": "tasty.p.rapidapi.com"
+    }
+
+    response2 = requests.get(url, headers=headers, params=querystring)
+
+    #step 5
+
+    recipie_data = pd.json_normalize(response2.json(), "results")
+    return(recipie_data)
+```
+
+```{python}
+df = get_meal_plan_data(154)
+df
+```
+
+## 4: Fuzzy matching 
+
+```{python}
+MEAT_KEYWORDS = {
+    # red meats & game
+    "beef","steak","ground beef","minced beef","hamburger","veal",
+    "pork","pork chop","pork belly","ribs","spare ribs","pulled pork","bacon","ham",
+    "lamb","mutton","goat","chevon","venison","bison","buffalo","boar","rabbit","hare",
+
+    # poultry
+    "chicken","chicken breast","chicken thigh","drumstick","wings",
+    "turkey","ground turkey","duck","goose","quail","pheasant",
+
+    # processed/cured
+    "sausage","bratwurst","kielbasa","chorizo","pepperoni","salami",
+    "mortadella","soppressata","bologna","pastrami","corned beef","hot dog","prosciutto","pancetta","spam",
+
+    # fish (common)
+    "salmon","tuna","cod","haddock","halibut","tilapia","trout","catfish",
+    "mackerel","sardine","anchovy","snapper","sole","pollock",
+
+    # shellfish & cephalopods
+    "shrimp","prawn","crab","lobster","scallop","clam","mussel","oyster",
+    "squid","calamari","octopus",
+
+    # generic terms
+    "meat","meatball","meatballs","meatloaf"
+}
+```
+
+```{python}
+ALT = "|".join(map(re.escape, sorted(MEAT_KEYWORDS, key=len, reverse=True)))
+MEAT_RE = re.compile(rf"\b(?:{ALT})\b", flags=re.IGNORECASE)
+
+df["vegitarian"] = ~df["name"].str.contains(MEAT_RE, na=False)
+df
+```
+
+## 5: Analzing Tasty API data
+
+```{python}
+(p9.ggplot(df, p9.aes(x = "name", y = "nutrition.calories", fill = "vegitarian"))
++p9.labs(title = "Tasty API Dataset Calorie Information", y = "Calories per meal")
++p9.scale_fill_manual(values = ("purple", "green"))
++p9.coord_flip()
++p9.theme(axis_text_y=p9.element_text(angle = 30, hjust = 1, vjust = 1))
++p9.geom_col())
+```
+
