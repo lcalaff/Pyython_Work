@@ -2247,8 +2247,8 @@ vertical-align: -.125em;
 </header>
 
 
-<p>&lt;&gt;</p>
-<div id="ea6a764d" class="cell" data-execution_count="1">
+<p><a href="https://github.com/lcalaff/Pyython_Work/tree/main/LAB%205" class="uri">https://github.com/lcalaff/Pyython_Work/tree/main/LAB%205</a></p>
+<div id="d388c900" class="cell" data-execution_count="1">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
@@ -2264,13 +2264,13 @@ vertical-align: -.125em;
 <h2 class="anchored" data-anchor-id="part-one-data-exploration">Part One: Data Exploration</h2>
 <section id="read-in-the-dataset-and-display-summaries-regarding-it" class="level3">
 <h3 class="anchored" data-anchor-id="read-in-the-dataset-and-display-summaries-regarding-it">1. Read in the dataset and display summaries regarding it</h3>
-<div id="53daf71b" class="cell" data-execution_count="2">
+<div id="49df2787" class="cell" data-execution_count="2">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>health_data <span class="op">=</span> pd.read_csv(<span class="st">&quot;https://www.dropbox.com/s/bocjjyo1ehr5auz/insurance_costs_1.csv?dl=1&quot;</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-<div id="757bb41f" class="cell" data-execution_count="3">
+<div id="89d6738e" class="cell" data-execution_count="3">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>health_data.describe()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -2343,7 +2343,7 @@ vertical-align: -.125em;
 </div>
 </div>
 </div>
-<div id="24a6a42f" class="cell" data-execution_count="4">
+<div id="84d8c6b5" class="cell" data-execution_count="4">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>health_data.info()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -2364,7 +2364,7 @@ dtypes: float64(2), int64(1), object(3)
 memory usage: 20.3+ KB</code></pre>
 </div>
 </div>
-<div id="958eaf42" class="cell" data-execution_count="5">
+<div id="f57b29b4" class="cell" data-execution_count="5">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>health_data.head()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -2441,7 +2441,7 @@ memory usage: 20.3+ KB</code></pre>
 </section>
 <section id="fixing-concerns-with-the-dataset" class="level3">
 <h3 class="anchored" data-anchor-id="fixing-concerns-with-the-dataset">2. Fixing Concerns with the dataset</h3>
-<div id="d7bf3f87" class="cell" data-execution_count="6">
+<div id="96bf140b" class="cell" data-execution_count="6">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>Clean_Health_Data <span class="op">=</span> pd.get_dummies(health_data)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -2450,7 +2450,7 @@ memory usage: 20.3+ KB</code></pre>
 </section>
 <section id="making-plots-comparing-repsonse-variable-to-the-various-previctor-variables" class="level3">
 <h3 class="anchored" data-anchor-id="making-plots-comparing-repsonse-variable-to-the-various-previctor-variables">3. Making plots comparing repsonse variable to the various previctor variables</h3>
-<div id="4fb1be10" class="cell" data-execution_count="7">
+<div id="22e318f9" class="cell" data-execution_count="7">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>(p9.ggplot(Clean_Health_Data, p9.aes(x <span class="op">=</span> <span class="st">&quot;bmi&quot;</span>, y <span class="op">=</span> <span class="st">&quot;charges&quot;</span>, fill <span class="op">=</span> <span class="st">&quot;sex_female&quot;</span>))</span>
@@ -2466,7 +2466,7 @@ memory usage: 20.3+ KB</code></pre>
 </div>
 </div>
 <p>Based on this first graph we can observe that their isn’t much of a difference between male and females as are as the distribution of ether charges or bmi, having similar results for each. We can see that the overall shape of this chart indicates that as bmi increases, charges will also increase at an exponential rate, however fitting a line to the plot would be difficult due to the unevenness of the distribution.</p>
-<div id="a62c0a89" class="cell" data-execution_count="8">
+<div id="7d2ab6df" class="cell" data-execution_count="8">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>(p9.ggplot(Clean_Health_Data, p9.aes(x <span class="op">=</span> <span class="st">&quot;age&quot;</span>, y <span class="op">=</span> <span class="st">&quot;charges&quot;</span>, fill <span class="op">=</span> <span class="st">&quot;smoker_yes&quot;</span>))</span>
@@ -2483,7 +2483,7 @@ memory usage: 20.3+ KB</code></pre>
 </div>
 </div>
 <p>This second graph does a good job at illustrating how charges will increase as you get older, at first i viewed this data without categorizing it by smoking and i could see the three different tiers of charges. We’ll see that the different tier of charges can be associated based on if you smoke or not with the people who smoke having a very high charges in the top tier of charges.</p>
-<div id="c54158b6" class="cell" data-execution_count="9">
+<div id="bb63561b" class="cell" data-execution_count="9">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>(p9.ggplot(health_data, p9.aes(x<span class="op">=</span><span class="st">&quot;age&quot;</span>, y <span class="op">=</span> <span class="st">&quot;charges&quot;</span>, fill <span class="op">=</span> <span class="st">&quot;region&quot;</span>))</span>
@@ -2506,7 +2506,7 @@ memory usage: 20.3+ KB</code></pre>
 <h2 class="anchored" data-anchor-id="part-two-simple-linear-models">Part Two: Simple Linear Models</h2>
 <section id="constructing-a-simple-linear-regression-model-for-charges-versus-age" class="level3">
 <h3 class="anchored" data-anchor-id="constructing-a-simple-linear-regression-model-for-charges-versus-age">1. Constructing a simple linear regression model for charges versus age</h3>
-<div id="4627faea" class="cell" data-execution_count="10">
+<div id="7716a82f" class="cell" data-execution_count="10">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>x2_1 <span class="op">=</span> Clean_Health_Data[[<span class="st">&quot;age&quot;</span>]]</span>
@@ -2548,7 +2548,7 @@ memory usage: 20.3+ KB</code></pre>
 </section>
 <section id="adding-a-model-that-includes-the-sex-variable" class="level3">
 <h3 class="anchored" data-anchor-id="adding-a-model-that-includes-the-sex-variable">2. Adding a model that includes the sex variable</h3>
-<div id="d8b28203" class="cell" data-execution_count="11">
+<div id="f4f7fdef" class="cell" data-execution_count="11">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>x2_2 <span class="op">=</span> Clean_Health_Data[[<span class="st">&quot;age&quot;</span>, <span class="st">&quot;sex_female&quot;</span>]]</span>
@@ -2589,7 +2589,7 @@ memory usage: 20.3+ KB</code></pre>
 </section>
 <section id="adding-model-with-smoker-rather-than-sex" class="level3">
 <h3 class="anchored" data-anchor-id="adding-model-with-smoker-rather-than-sex">3. Adding model with smoker rather than sex</h3>
-<div id="ee18726e" class="cell" data-execution_count="12">
+<div id="0e084488" class="cell" data-execution_count="12">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>x2_3 <span class="op">=</span> Clean_Health_Data[[<span class="st">&quot;age&quot;</span>, <span class="st">&quot;smoker_yes&quot;</span>]]</span>
@@ -2629,7 +2629,7 @@ memory usage: 20.3+ KB</code></pre>
 </section>
 <section id="determining-the-better-fitting-model-using-mse-and-r-squared-values" class="level3">
 <h3 class="anchored" data-anchor-id="determining-the-better-fitting-model-using-mse-and-r-squared-values">4. Determining the better fitting model using MSE and R-Squared Values</h3>
-<div id="ab0035e2" class="cell" data-execution_count="13">
+<div id="c708fd52" class="cell" data-execution_count="13">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>age_sex_MSE <span class="op">=</span> mean_squared_error(y2_2, age_sex_model.predict(x2_2))</span>
@@ -2646,7 +2646,7 @@ memory usage: 20.3+ KB</code></pre>
 <pre><code>33719831.46524373</code></pre>
 </div>
 </div>
-<div id="a7dcd701" class="cell" data-execution_count="14">
+<div id="255c206d" class="cell" data-execution_count="14">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>age_sex_R <span class="op">=</span> r2_score(y2_2, age_sex_model.predict(x2_2))</span>
@@ -2669,7 +2669,7 @@ memory usage: 20.3+ KB</code></pre>
 <h2 class="anchored" data-anchor-id="part-three-multiple-linear-models">Part Three: Multiple Linear Models</h2>
 <section id="fitting-a-model-that-uses-age-and-bmi-as-predictors" class="level3">
 <h3 class="anchored" data-anchor-id="fitting-a-model-that-uses-age-and-bmi-as-predictors">1. Fitting a model that uses age and bmi as predictors</h3>
-<div id="c75bd725" class="cell" data-execution_count="15">
+<div id="86524d8a" class="cell" data-execution_count="15">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>x3 <span class="op">=</span> health_data.drop({<span class="st">&quot;charges&quot;</span>, <span class="st">&quot;sex&quot;</span>, <span class="st">&quot;smoker&quot;</span>, <span class="st">&quot;region&quot;</span>}, axis<span class="op">=</span><span class="dv">1</span>)</span>
@@ -2684,7 +2684,7 @@ memory usage: 20.3+ KB</code></pre>
 <span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a>Clean_Health_Data[<span class="st">&quot;pred_Mult&quot;</span>] <span class="op">=</span> ML_age_bmi.predict(x3)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-<div id="3c156f30" class="cell" data-execution_count="16">
+<div id="4a7862ed" class="cell" data-execution_count="16">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb24"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>MSE_age_bmi <span class="op">=</span> mean_squared_error(y_train, ML_age_bmi.predict(x_age_bmi_sub))</span>
@@ -2693,13 +2693,13 @@ memory usage: 20.3+ KB</code></pre>
 <span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>r2_age_bmi</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-stdout">
-<pre><code>123471963.01862782</code></pre>
+<pre><code>124679825.25248766</code></pre>
 </div>
 <div class="cell-output cell-output-display" data-execution_count="16">
-<pre><code>0.12583571800379922</code></pre>
+<pre><code>0.12923530608591127</code></pre>
 </div>
 </div>
-<div id="2c72bd2d" class="cell" data-execution_count="17">
+<div id="611fd8ed" class="cell" data-execution_count="17">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb27"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>diff_MSE1 <span class="op">=</span> MSE_age_bmi <span class="op">-</span> MSE_base</span>
@@ -2708,10 +2708,10 @@ memory usage: 20.3+ KB</code></pre>
 </details>
 <div class="cell-output cell-output-stdout">
 <pre><code>The difference in mean squared errors is supprising as the base model indicates a lower
-error value with the differece being -3267304.8916360587</code></pre>
+error value with the differece being -2059442.6577762216</code></pre>
 </div>
 </div>
-<div id="01f12962" class="cell" data-execution_count="18">
+<div id="b769eeaf" class="cell" data-execution_count="18">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb29"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>diff_R1 <span class="op">=</span> r2_age_bmi <span class="op">-</span> R_base</span>
@@ -2720,13 +2720,13 @@ error value with the differece being -3267304.8916360587</code></pre>
 </details>
 <div class="cell-output cell-output-stdout">
 <pre><code>observing the differnce in r squared scores we can see that the multiple linear regression
-outperformed the base model with an r squared differnce of 0.02645466348317216</code></pre>
+outperformed the base model with an r squared differnce of 0.029854251565284207</code></pre>
 </div>
 </div>
 </section>
 <section id="fitting-a-model-using-age-and-age2" class="level3">
 <h3 class="anchored" data-anchor-id="fitting-a-model-using-age-and-age2">2. Fitting a model using age and age^2</h3>
-<div id="fdb0195a" class="cell" data-execution_count="19">
+<div id="ef2f52f4" class="cell" data-execution_count="19">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb31"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>health_data[<span class="st">&quot;age_x2&quot;</span>] <span class="op">=</span> health_data[<span class="st">&quot;age&quot;</span>] <span class="op">**</span><span class="dv">2</span></span>
@@ -2742,7 +2742,7 @@ outperformed the base model with an r squared differnce of 0.02645466348317216</
 <span id="cb31-11"><a href="#cb31-11" aria-hidden="true" tabindex="-1"></a>Clean_Health_Data[<span class="st">&quot;pred_age2&quot;</span>] <span class="op">=</span> ML_age_2.predict(x3_2)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-<div id="dec52c24" class="cell" data-execution_count="20">
+<div id="c5ff756a" class="cell" data-execution_count="20">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb32"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>MSE_age2 <span class="op">=</span> mean_squared_error(y_train, ML_age_2.predict(x_age_2))</span>
@@ -2751,13 +2751,13 @@ outperformed the base model with an r squared differnce of 0.02645466348317216</
 <span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>r2_age2</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-stdout">
-<pre><code>128200599.28769124</code></pre>
+<pre><code>131308545.251997</code></pre>
 </div>
 <div class="cell-output cell-output-display" data-execution_count="20">
-<pre><code>0.10268201875320127</code></pre>
+<pre><code>0.07903292318628619</code></pre>
 </div>
 </div>
-<div id="6c4e35e9" class="cell" data-execution_count="21">
+<div id="4a196c9b" class="cell" data-execution_count="21">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb35"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>diff_MSE2 <span class="op">=</span> MSE_age2 <span class="op">-</span> MSE_base</span>
@@ -2766,10 +2766,10 @@ outperformed the base model with an r squared differnce of 0.02645466348317216</
 </details>
 <div class="cell-output cell-output-stdout">
 <pre><code>although the differnces were slightly lower for Mean Standard Error, their was still a
-high error value for the newer model and the base model outperformed the newer by 1461331.3774273545</code></pre>
+high error value for the newer model and the base model outperformed the newer by 4569277.341733113</code></pre>
 </div>
 </div>
-<div id="753fe590" class="cell" data-execution_count="22">
+<div id="dcff75c1" class="cell" data-execution_count="22">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb37"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>diff_R2 <span class="op">=</span> <span class="ss">f&quot;</span><span class="sc">{</span>(r2_age2 <span class="op">-</span> R_base)<span class="sc">: .10f}</span><span class="ss">&quot;</span></span>
@@ -2778,13 +2778,13 @@ high error value for the newer model and the base model outperformed the newer b
 </details>
 <div class="cell-output cell-output-stdout">
 <pre><code>looking at this model we can see based on the r squared value is barely better than the base model
-with a differnce of 0.0033009642</code></pre>
+with a differnce of-0.0203481313</code></pre>
 </div>
 </div>
 </section>
 <section id="fitting-a-polynomial-model-to-the-4th-degree" class="level3">
 <h3 class="anchored" data-anchor-id="fitting-a-polynomial-model-to-the-4th-degree">3. Fitting a polynomial model to the 4th degree</h3>
-<div id="4e12eb6a" class="cell" data-execution_count="23">
+<div id="ffb09109" class="cell" data-execution_count="23">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb39"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a>four_degree_coef <span class="op">=</span> np.polyfit(Clean_Health_Data[<span class="st">&quot;age&quot;</span>], Clean_Health_Data[<span class="st">&quot;charges&quot;</span>], <span class="dv">4</span>)</span>
@@ -2796,7 +2796,7 @@ with a differnce of 0.0033009642</code></pre>
 <span id="cb39-7"><a href="#cb39-7" aria-hidden="true" tabindex="-1"></a>r2_4th <span class="op">=</span> r2_score(Clean_Health_Data[<span class="st">&quot;charges&quot;</span>], Clean_Health_Data[<span class="st">&quot;Pred_4th&quot;</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-<div id="711bd55d" class="cell" data-execution_count="24">
+<div id="cf541d3c" class="cell" data-execution_count="24">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb40"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a>diff_MSE3 <span class="op">=</span> MSE_base <span class="op">-</span> MSE_4th</span>
@@ -2814,7 +2814,7 @@ with a differnce of 0.0033009642</code></pre>
 </section>
 <section id="fitting-a-polynomial-model-using-12-degrees" class="level3">
 <h3 class="anchored" data-anchor-id="fitting-a-polynomial-model-using-12-degrees">4. Fitting a polynomial model using 12 degrees</h3>
-<div id="36a33a86" class="cell" data-execution_count="25">
+<div id="c8f0d9b5" class="cell" data-execution_count="25">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb43"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a>twelve_degree_coef <span class="op">=</span> np.polyfit(Clean_Health_Data[<span class="st">&quot;age&quot;</span>], Clean_Health_Data[<span class="st">&quot;charges&quot;</span>], <span class="dv">12</span>)</span>
@@ -2826,7 +2826,7 @@ with a differnce of 0.0033009642</code></pre>
 <span id="cb43-7"><a href="#cb43-7" aria-hidden="true" tabindex="-1"></a>r2_12th <span class="op">=</span> r2_score(Clean_Health_Data[<span class="st">&quot;charges&quot;</span>], Clean_Health_Data[<span class="st">&quot;Pred_12th&quot;</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-<div id="64b85ac5" class="cell" data-execution_count="26">
+<div id="d88066d0" class="cell" data-execution_count="26">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb44"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a>diff_MSE4 <span class="op">=</span> MSE_base <span class="op">-</span> MSE_12th</span>
@@ -2844,7 +2844,7 @@ with a differnce of 0.0033009642</code></pre>
 </section>
 <section id="which-is-the-best-model-to-use-according-to-mse-and-r-squared" class="level3">
 <h3 class="anchored" data-anchor-id="which-is-the-best-model-to-use-according-to-mse-and-r-squared">5. Which is the best model to use according to MSE and R-Squared</h3>
-<div id="0097f721" class="cell" data-execution_count="27">
+<div id="9b0a214e" class="cell" data-execution_count="27">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb47"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a>MSE_data <span class="op">=</span> {</span>
@@ -2857,10 +2857,10 @@ with a differnce of 0.0033009642</code></pre>
 <span id="cb47-8"><a href="#cb47-8" aria-hidden="true" tabindex="-1"></a><span class="bu">min</span>(MSE_data, key<span class="op">=</span>MSE_data.get)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-display" data-execution_count="27">
-<pre><code>&#39;Age_Bmi_MSE&#39;</code></pre>
+<pre><code>&#39;Twelth_Degree_MSE&#39;</code></pre>
 </div>
 </div>
-<div id="230559f6" class="cell" data-execution_count="28">
+<div id="ef669330" class="cell" data-execution_count="28">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb49"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a>R_data <span class="op">=</span> {</span>
@@ -2877,7 +2877,7 @@ with a differnce of 0.0033009642</code></pre>
 </div>
 </div>
 <p>according to the MSE the best model is the twelfth degree model however according to the R Sqaured the best model is Age_Squared. i don’t agree with these outcomes as when we first displayed the data their are various trends to notice which make it difficult to plot a single line on the graph. If we were plotting two or three lines of best fit this would help boost are MSE and R-squared values to better represent the data.</p>
-<div id="349bc36d" class="cell" data-execution_count="29">
+<div id="53101210" class="cell" data-execution_count="29">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb51"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a>(p9.ggplot(Clean_Health_Data, p9.aes(</span>
@@ -2902,13 +2902,13 @@ with a differnce of 0.0033009642</code></pre>
 <h2 class="anchored" data-anchor-id="part-four-new-data">Part Four: New Data</h2>
 <section id="import-new-dataset" class="level3">
 <h3 class="anchored" data-anchor-id="import-new-dataset">1. Import new dataset</h3>
-<div id="a8ae02f7" class="cell" data-execution_count="30">
+<div id="677c7aee" class="cell" data-execution_count="30">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb52"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a>updated_health <span class="op">=</span>pd.read_csv(<span class="st">&quot;https://www.dropbox.com/s/sky86agc4s8c6qe/insurance_costs_2.csv?dl=1&quot;</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-<div id="3cb19981" class="cell" data-execution_count="31">
+<div id="ed5ae9ef" class="cell" data-execution_count="31">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb53"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a>C_health <span class="op">=</span> pd.get_dummies(updated_health)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -2917,7 +2917,7 @@ with a differnce of 0.0033009642</code></pre>
 </section>
 <section id="creating-a-function-that-workers-to-take-various-inputs-of-training-and-fitting-the-linear-regressions" class="level3">
 <h3 class="anchored" data-anchor-id="creating-a-function-that-workers-to-take-various-inputs-of-training-and-fitting-the-linear-regressions">2. Creating a function that workers to take various inputs of training and fitting the linear regressions</h3>
-<div id="580cd75b" class="cell" data-execution_count="32">
+<div id="d7c106f0" class="cell" data-execution_count="32">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb54"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a>x4 <span class="op">=</span> C_health.drop(columns<span class="op">=</span>(<span class="st">&quot;charges&quot;</span>))</span>
@@ -3017,7 +3017,7 @@ with a differnce of 0.0033009642</code></pre>
 </section>
 <section id="only-age-as-the-predictor" class="level3">
 <h3 class="anchored" data-anchor-id="only-age-as-the-predictor">3. Only age as the predictor</h3>
-<div id="5f309b2e" class="cell" data-execution_count="33">
+<div id="d4712f82" class="cell" data-execution_count="33">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb55"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a>fitting_and_Computing(C_health, <span class="st">&quot;charges&quot;</span>, <span class="st">&quot;n/a&quot;</span>, <span class="st">&quot;pred_age&quot;</span>, <span class="st">&quot;age&quot;</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -3029,7 +3029,7 @@ with a differnce of 0.0033009642</code></pre>
 </section>
 <section id="age-and-bmi-as-the-predictors" class="level3">
 <h3 class="anchored" data-anchor-id="age-and-bmi-as-the-predictors">4. Age and BMI as the predictors</h3>
-<div id="aa9eca16" class="cell" data-execution_count="34">
+<div id="c0ad5f89" class="cell" data-execution_count="34">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb57"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a>fitting_and_Computing(C_health, <span class="st">&quot;charges&quot;</span>,<span class="st">&quot;n/a&quot;</span>,<span class="st">&quot;pred_age_bmi&quot;</span>, <span class="st">&quot;age&quot;</span>, <span class="st">&quot;bmi&quot;</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -3041,7 +3041,7 @@ with a differnce of 0.0033009642</code></pre>
 </section>
 <section id="age-bmi-smoker-as-predictor-variables" class="level3">
 <h3 class="anchored" data-anchor-id="age-bmi-smoker-as-predictor-variables">5. Age, BMI, Smoker as predictor variables</h3>
-<div id="2d04217d" class="cell" data-execution_count="35">
+<div id="d54c99d2" class="cell" data-execution_count="35">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb59"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a>fitting_and_Computing(C_health, <span class="st">&quot;charges&quot;</span>,<span class="st">&quot;n/a&quot;</span>,<span class="st">&quot;pred_age_bmi_smoker&quot;</span>, <span class="st">&quot;age&quot;</span>, <span class="st">&quot;bmi&quot;</span>, <span class="st">&quot;smoker_yes&quot;</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -3053,7 +3053,7 @@ with a differnce of 0.0033009642</code></pre>
 </section>
 <section id="age-and-bmi-as-quantitative-variables-with-smoker-as-the-interaction-term" class="level3">
 <h3 class="anchored" data-anchor-id="age-and-bmi-as-quantitative-variables-with-smoker-as-the-interaction-term">6. Age and BMI as quantitative variables, with smoker as the interaction term</h3>
-<div id="b96f3ce4" class="cell" data-execution_count="36">
+<div id="2c5ff373" class="cell" data-execution_count="36">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb61"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a>fitting_and_Computing(C_health, <span class="st">&quot;charges&quot;</span>,<span class="st">&quot;two&quot;</span>,<span class="st">&quot;pred_inter_smoke&quot;</span>, <span class="st">&quot;age&quot;</span>, <span class="st">&quot;bmi&quot;</span>, <span class="st">&quot;smoker_yes&quot;</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -3065,7 +3065,7 @@ with a differnce of 0.0033009642</code></pre>
 </section>
 <section id="age-bmi-and-smoker-as-predictors-with-an-interaction-of-the-smoker-variable" class="level3">
 <h3 class="anchored" data-anchor-id="age-bmi-and-smoker-as-predictors-with-an-interaction-of-the-smoker-variable">7. Age, BMI, and Smoker as predictors, with an interaction of the Smoker Variable</h3>
-<div id="9f03a1ea" class="cell" data-execution_count="37">
+<div id="58cab852" class="cell" data-execution_count="37">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb63"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a>fitting_and_Computing(C_health, <span class="st">&quot;charges&quot;</span>,<span class="st">&quot;three&quot;</span>,<span class="st">&quot;pred_outer_smoke&quot;</span>, <span class="st">&quot;age&quot;</span>, <span class="st">&quot;bmi&quot;</span>, <span class="st">&quot;smoker_yes&quot;</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -3078,7 +3078,7 @@ with a differnce of 0.0033009642</code></pre>
 </section>
 <section id="plotting-a-residual-chart" class="level3">
 <h3 class="anchored" data-anchor-id="plotting-a-residual-chart">8. Plotting a residual chart</h3>
-<div id="28c41472" class="cell" data-execution_count="38">
+<div id="eecb31e7" class="cell" data-execution_count="38">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb65"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb65-1"><a href="#cb65-1" aria-hidden="true" tabindex="-1"></a>C_health[<span class="st">&quot;res1&quot;</span>] <span class="op">=</span> C_health[<span class="st">&quot;charges&quot;</span>] <span class="op">-</span> C_health[<span class="st">&quot;pred_age_bmi_smoker&quot;</span>]</span>
@@ -3103,7 +3103,7 @@ with a differnce of 0.0033009642</code></pre>
 </section>
 <section id="part-five-full-exploration" class="level2">
 <h2 class="anchored" data-anchor-id="part-five-full-exploration">Part Five: Full Exploration</h2>
-<div id="c9ac0c4c" class="cell" data-execution_count="39">
+<div id="ea9d0a6f" class="cell" data-execution_count="39">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb66"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb66-1"><a href="#cb66-1" aria-hidden="true" tabindex="-1"></a>Xtr <span class="op">=</span> x_train[[<span class="st">&quot;age&quot;</span>, <span class="st">&quot;bmi&quot;</span>, <span class="st">&quot;smoker_yes&quot;</span>, <span class="st">&quot;sex_female&quot;</span>, <span class="st">&quot;region_northwest&quot;</span>]]</span>
@@ -3115,7 +3115,7 @@ with a differnce of 0.0033009642</code></pre>
 <span id="cb66-7"><a href="#cb66-7" aria-hidden="true" tabindex="-1"></a>C_health[<span class="st">&quot;res2&quot;</span>] <span class="op">=</span> C_health[<span class="st">&quot;charges&quot;</span>] <span class="op">-</span> C_health[<span class="st">&quot;pred_final&quot;</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-<div id="9dd6b020" class="cell" data-execution_count="40">
+<div id="c2200745" class="cell" data-execution_count="40">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb67"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb67-1"><a href="#cb67-1" aria-hidden="true" tabindex="-1"></a>(p9.ggplot(C_health, p9.aes(</span>
