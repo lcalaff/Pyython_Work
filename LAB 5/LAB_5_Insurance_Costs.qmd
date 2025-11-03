@@ -1,0 +1,498 @@
+---
+title: 'LAB 5: Insurance Costs'
+author: Lucas Calaff
+jupyter: python3
+format:
+  html:
+    toc: true
+    code-fold: true
+    theme: Darkly
+    highlight-style: breezedark
+    embed-resources: true
+execute:
+  enabled: true
+---
+
+\<\>
+
+```{python}
+import pandas as pd
+import numpy as np 
+import plotnine as p9
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error
+from sklearn.metrics import r2_score
+from sklearn.model_selection import train_test_split
+```
+
+## Part One: Data Exploration
+
+### 1. Read in the dataset and display summaries regarding it
+
+```{python}
+health_data = pd.read_csv("https://www.dropbox.com/s/bocjjyo1ehr5auz/insurance_costs_1.csv?dl=1")
+```
+
+```{python}
+health_data.describe()
+```
+
+```{python}
+health_data.info()
+```
+
+```{python}
+health_data.head()
+```
+
+Looking at this dataset that are a few problems that will need to be addressed before doing anything else. For starters we can tell that the gender variable is a dummy variable that can be represented by True or False, Regions can be turned into a categorical variable, and smokes can also be a dummy variable
+
+### 2. Fixing Concerns with the dataset
+
+```{python}
+Clean_Health_Data = pd.get_dummies(health_data)
+```
+
+### 3. Making plots comparing repsonse variable to the various previctor variables
+
+```{python}
+(p9.ggplot(Clean_Health_Data, p9.aes(x = "bmi", y = "charges", fill = "sex_female"))
++p9.geom_point()
+)
+```
+
+Based on this first graph we can observe that their isn't much of a difference between male and females as are as the distribution of ether charges or bmi, having similar results for each. We can see that the overall shape of this chart indicates that as bmi increases, charges will also increase at an exponential rate, however fitting a line to the plot would be difficult due to the unevenness of the distribution.
+
+```{python}
+(p9.ggplot(Clean_Health_Data, p9.aes(x = "age", y = "charges", fill = "smoker_yes"))
+
++p9.geom_point()
+)
+```
+
+This second graph does a good job at illustrating how charges will increase as you get older, at first i viewed this data without categorizing it by smoking and i could see the three different tiers of charges. We'll see that the different tier of charges can be associated based on if you smoke or not with the people who smoke having a very high charges in the top tier of charges.
+
+```{python}
+(p9.ggplot(health_data, p9.aes(x="age", y = "charges", fill = "region"))
+
++p9.geom_point())
+```
+
+Using a similar graph as the previous one we still observe the 3 tiers, and looking at the different regions we can see that their effects on charges are equal and don't equate to much explanatory value, this variable will most likely not be needed for the interpretation of our data in the remaining models.
+
+Based on these 3 plots we can infer that smoking is going to most likely have the most explanatory value for the response variable of charges.
+
+## Part Two: Simple Linear Models
+
+### 1. Constructing a simple linear regression model for charges versus age
+
+```{python}
+x2_1 = Clean_Health_Data[["age"]]
+y2_1 = Clean_Health_Data["charges"]
+
+base_age_model = LinearRegression().fit(x2_1, y2_1)
+Clean_Health_Data["Pred_Base"] = base_age_model.predict(x2_1)
+
+MSE_base = mean_squared_error(y2_1, base_age_model.predict(x2_1))
+R_base = r2_score(y2_1, base_age_model.predict(x2_1))
+
+print(Clean_Health_Data[["age", "charges", "Pred_Base"]].head())
+
+(p9.ggplot(Clean_Health_Data, p9.aes(
+    x = "age", 
+    y = "charges"
+)) 
++p9.geom_line(Clean_Health_Data, p9.aes("age", "Pred_Base"), color = "red")
++p9.geom_point()
+)
+```
+
+Using our model we can observe that the predicting attempted to best fit with the first tier of charges and got pretty close, however the points above with higher charges pulled our prediction values higher. Looking at the first 5 rows of data we can see that their is a big difference between the predicted charge versus the actual charge and we will need to change the model to help create better fitting predictions.
+
+### 2. Adding a model that includes the sex variable
+
+```{python}
+x2_2 = Clean_Health_Data[["age", "sex_female"]]
+y2_2 = Clean_Health_Data["charges"]
+
+age_sex_model = LinearRegression().fit(x2_2, y2_2)
+
+Clean_Health_Data["pred_Sex"] = age_sex_model.predict(x2_2)
+Clean_Health_Data =  Clean_Health_Data.sort_values(["sex_female", "age"])
+
+
+print(Clean_Health_Data[["age", "sex_female", "charges", "pred_Sex"]].head())
+
+(p9.ggplot(Clean_Health_Data, p9.aes(
+    x = "age", 
+    y = "charges"
+)) 
++p9.geom_line(Clean_Health_Data, p9.aes("age", "pred_Sex"), color = "red")
++p9.geom_point()
+)
+```
+
+### 3. Adding model with smoker rather than sex
+
+```{python}
+x2_3 = Clean_Health_Data[["age", "smoker_yes"]]
+y2_3 = Clean_Health_Data["charges"]
+
+age_smoker_model = LinearRegression().fit(x2_3, y2_3)
+
+Clean_Health_Data["pred_Smoker"] = age_smoker_model.predict(x2_3)
+Clean_Health_Data =  Clean_Health_Data.sort_values(["smoker_yes", "age"])
+
+print(Clean_Health_Data[["age", "smoker_yes", "charges", "pred_Smoker"]].head())
+
+(p9.ggplot(Clean_Health_Data, p9.aes(
+    x = "age", 
+    y = "charges"
+)) 
++p9.geom_line(Clean_Health_Data, p9.aes("age", "pred_Smoker"), color = "red")
++p9.geom_point()
+)
+```
+
+### 4. Determining the better fitting model using MSE and R-Squared Values
+
+```{python}
+age_sex_MSE = mean_squared_error(y2_2, age_sex_model.predict(x2_2))
+
+age_smoker_MSE = mean_squared_error(y2_3, age_smoker_model.predict(x2_3))
+
+print(age_sex_MSE)
+age_smoker_MSE
+```
+
+```{python}
+age_sex_R = r2_score(y2_2, age_sex_model.predict(x2_2))
+
+age_smoker_R = r2_score(y2_3, age_smoker_model.predict(x2_3))
+print(age_sex_R)
+age_smoker_R
+```
+
+Based on the comparison of these two model we can see that the age_smoker_model fits the data slightly better than the age_sex_model does. The most definite way that we can see this is using the r-squared values which indicate that 76% of the data is represented by the age_smoker_model versus only 10% represented by the age_sex_model. One consideration to make is that we got very high mean squared error values for both of the models, likely due to the sheer number of outliers and variations that are in the data.
+
+## Part Three: Multiple Linear Models
+
+### 1. Fitting a model that uses age and bmi as predictors
+
+```{python}
+x3 = health_data.drop({"charges", "sex", "smoker", "region"}, axis=1)
+
+y3 = health_data["charges"]
+
+x_train, x_test, y_train, y_test = train_test_split(x3,y3, test_size = 0.25)
+
+x_age_bmi_sub = x_train[["age", "bmi"]]
+
+ML_age_bmi = LinearRegression().fit(x_age_bmi_sub, y_train)
+Clean_Health_Data["pred_Mult"] = ML_age_bmi.predict(x3)
+```
+
+```{python}
+MSE_age_bmi = mean_squared_error(y_train, ML_age_bmi.predict(x_age_bmi_sub))
+print(MSE_age_bmi)
+r2_age_bmi = r2_score(y_train ,ML_age_bmi.predict(x_age_bmi_sub))
+r2_age_bmi
+```
+
+```{python}
+diff_MSE1 = MSE_age_bmi - MSE_base
+print("The difference in mean squared errors is supprising as the base model indicates a lower"
+"\nerror value with the differece being " + str(diff_MSE1))
+```
+
+```{python}
+diff_R1 = r2_age_bmi - R_base
+print("observing the differnce in r squared scores we can see that the multiple linear regression"
+"\noutperformed the base model with an r squared differnce of " +str(diff_R1))
+```
+
+### 2. Fitting a model using age and age\^2
+
+```{python}
+health_data["age_x2"] = health_data["age"] **2
+
+x3_2 = health_data.drop({"charges", "sex", "smoker","bmi", "region"}, axis=1)
+
+x_train, x_test, y_train, y_test = train_test_split(x3_2,y3, test_size = 0.25)
+
+x_age_2 = x_train[["age", "age_x2"]]
+
+ML_age_2 = LinearRegression().fit(x_age_2, y_train)
+
+Clean_Health_Data["pred_age2"] = ML_age_2.predict(x3_2)
+```
+
+```{python}
+MSE_age2 = mean_squared_error(y_train, ML_age_2.predict(x_age_2))
+print(MSE_age2)
+r2_age2 = r2_score(y_train ,ML_age_2.predict(x_age_2))
+r2_age2
+```
+
+```{python}
+diff_MSE2 = MSE_age2 - MSE_base
+print("although the differnces were slightly lower for Mean Standard Error, their was still a"
+"\nhigh error value for the newer model and the base model outperformed the newer by " +str(diff_MSE2))
+```
+
+```{python}
+diff_R2 = f"{(r2_age2 - R_base): .10f}"
+print("looking at this model we can see based on the r squared value is barely better than the base model"
+"\nwith a differnce of" +str(diff_R2))
+```
+
+### 3. Fitting a polynomial model to the 4th degree
+
+```{python}
+four_degree_coef = np.polyfit(Clean_Health_Data["age"], Clean_Health_Data["charges"], 4)
+
+Four_model = np.poly1d(four_degree_coef)
+Clean_Health_Data["Pred_4th"] = Four_model(Clean_Health_Data["age"])
+
+MSE_4th = mean_squared_error(Clean_Health_Data["charges"], Clean_Health_Data["Pred_4th"])
+r2_4th = r2_score(Clean_Health_Data["charges"], Clean_Health_Data["Pred_4th"])
+```
+
+```{python}
+diff_MSE3 = MSE_base - MSE_4th
+diff_R3 = r2_4th - R_base
+print(diff_MSE3)
+diff_R3
+```
+
+### 4. Fitting a polynomial model using 12 degrees
+
+```{python}
+twelve_degree_coef = np.polyfit(Clean_Health_Data["age"], Clean_Health_Data["charges"], 12)
+
+twelve_model = np.poly1d(twelve_degree_coef)
+Clean_Health_Data["Pred_12th"] = twelve_model(Clean_Health_Data["age"])
+
+MSE_12th = mean_squared_error(Clean_Health_Data["charges"], Clean_Health_Data["Pred_12th"])
+r2_12th = r2_score(Clean_Health_Data["charges"], Clean_Health_Data["Pred_12th"])
+```
+
+```{python}
+diff_MSE4 = MSE_base - MSE_12th
+diff_R4 = r2_12th - R_base
+print(diff_MSE4)
+diff_R4
+```
+
+### 5. Which is the best model to use according to MSE and R-Squared
+
+```{python}
+MSE_data = {
+    "Age_Bmi_MSE": MSE_age_bmi,
+    "Age_Squared_MSE": MSE_age2,
+    "Fourth_Degree_MSE": MSE_4th,
+    "Twelth_Degree_MSE": MSE_12th
+}
+
+min(MSE_data, key=MSE_data.get)
+```
+
+```{python}
+R_data = {
+    "Age_Bmi_R": r2_age_bmi,
+    "Age_Squared_R": r2_age2,
+    "Fourth_Degree_R": r2_4th,
+    "Twelth_Degree_R": r2_12th
+}
+
+min(R_data, key=R_data.get)
+```
+
+according to the MSE the best model is the twelfth degree model however according to the R Sqaured the best model is Age_Squared. i don't agree with these outcomes as when we first displayed the data their are various trends to notice which make it difficult to plot a single line on the graph. If we were plotting two or three lines of best fit this would help boost are MSE and R-squared values to better represent the data.
+
+```{python}
+(p9.ggplot(Clean_Health_Data, p9.aes(
+    x = "age", 
+    y = "charges"))
+    
++p9.geom_line(Clean_Health_Data, p9.aes("age", "Pred_12th"), color = "green")
++p9.geom_point()
+)
+```
+
+## Part Four: New Data
+
+### 1. Import new dataset
+
+```{python}
+updated_health =pd.read_csv("https://www.dropbox.com/s/sky86agc4s8c6qe/insurance_costs_2.csv?dl=1")
+```
+
+```{python}
+C_health = pd.get_dummies(updated_health)
+```
+
+### 2. Creating a function that workers to take various inputs of training and fitting the linear regressions
+
+```{python}
+x4 = C_health.drop(columns=("charges"))
+y4 = C_health["charges"]
+
+x_train = x4         
+y_train = y4
+
+
+def fitting_and_Computing(new_df,y, inter_type, pred_name ,x1, x2 =None,x3= None):
+
+    """
+    This Function is used to help compare the two data sets and fit linear regression models 
+    with eachother using different methods in order to determine which model contained the 
+    best overall fit for the data we provided prior to calling this function. 
+
+    Parameters
+    ----------
+    new_df: This is the model that we will use to help display our predictions and is the model we 
+    will be fitting. it also will be used in the nested function make_feature to help index and align 
+    the columns used. 
+
+    y: y is the value that we willbe trying to fit to throughout the linear regression
+
+    inter_type (n/a, two, three): this value is ethier n/a, meaning that we are just using the 
+    x values to make predictions and not interacting at all. it can be two which means that we 
+    are taking the first two x values and interacting them with the third one. If three is passed 
+    we are adding the first two values together and interacting that with the third x value. 
+
+    pred_name: This value is coulmn name that will be stored in the new_df dataframe that we passed
+    and will have all of the prediction values stored inside of it
+
+    x1: this will be a column name that we want to perfom linear regression on 
+
+    x2 and x3: these are also column names but are optional on if you wish to pass in an column name to 
+    them, this function works regardless if they have an input or not.
+
+    Returns
+    -------
+    MSE: this is the mean standard error that our linear regression model found.
+    r2: this is the R-Squared value that the linear regression model found.
+    """
+    
+    cols = [x1]
+    if isinstance(x2, str):
+        cols.append(x2)
+    if isinstance(x3, str) and inter_type == "n/a":
+        cols.append(x3)
+
+    Xtr = x_train[cols].copy()
+    ytr = y_train
+
+    if inter_type == "two":
+
+        if not (isinstance(x2,str) and isinstance(x3,str)):
+            raise ValueError()
+        Xtr[f"{x1}_Smoke"] = x_train[x1] * x_train[x3]
+        Xtr[f"{x2}_Smoke"] = x_train[x2] * x_train[x3]
+        Xtr = Xtr[[f"{x1}_Smoke", f"{x2}_Smoke"]]
+    
+    elif inter_type == "three":
+        if not (isinstance(x2,str) and isinstance(x3,str)):
+            raise ValueError()
+        comb = f"{x1}{x2}{x3}_Com"
+        Xtr[comb] = (x_train[x1] + x_train[x2]) * x_train[x3]
+        Xtr = Xtr[[comb]]        
+
+    Lr = LinearRegression().fit(Xtr,ytr)
+    yhat_tr = Lr.predict(Xtr)
+
+    new_df.loc[Xtr.index, pred_name] = yhat_tr
+
+    MSE = mean_squared_error(ytr, yhat_tr)
+    r2 = r2_score(ytr, yhat_tr)
+
+    def make_features(df):
+        X = pd.DataFrame(index=df.index)
+        if inter_type == "n/a":
+                X[x1] = df[x1]
+                if isinstance(x2, str): X[x2] = df[x2]
+                if isinstance(x3, str): X[x3] = df[x3]
+        elif inter_type == "two":
+                X[f"{x1}_Smoke"] = df[x1] * df[x3]
+                X[f"{x2}_Smoke"] = df[x2] * df[x3]
+                X = X[[f"{x1}_Smoke", f"{x2}_Smoke"]]
+        else: 
+                comb = f"{x1}{x2}{x3}_Com"
+                X[comb] = (df[x1] + df[x2]) * df[x3]
+                X = X[[comb]]
+        return X
+
+    Xnew = make_features(new_df).reindex(columns=Xtr.columns, fill_value=0)
+    new_df[pred_name] = Lr.predict(Xnew)
+    return MSE, r2
+```
+
+### 3. Only age as the predictor
+
+```{python}
+fitting_and_Computing(C_health, "charges", "n/a", "pred_age", "age")
+```
+
+### 4. Age and BMI as the predictors
+
+```{python}
+fitting_and_Computing(C_health, "charges","n/a","pred_age_bmi", "age", "bmi")
+```
+
+### 5. Age, BMI, Smoker as predictor variables
+
+```{python}
+fitting_and_Computing(C_health, "charges","n/a","pred_age_bmi_smoker", "age", "bmi", "smoker_yes")
+```
+
+### 6. Age and BMI as quantitative variables, with smoker as the interaction term
+
+```{python}
+fitting_and_Computing(C_health, "charges","two","pred_inter_smoke", "age", "bmi", "smoker_yes")
+```
+
+### 7. Age, BMI, and Smoker as predictors, with an interaction of the Smoker Variable
+
+```{python}
+fitting_and_Computing(C_health, "charges","three","pred_outer_smoke", "age", "bmi", "smoker_yes")
+```
+
+The best model based on all of the values above would be the pred_age_bmi_smoker model which used all 3 variables as predictor variables with the lowest MSE and a fairly high R-Squared value of almost .80, indicating the best fit out of all the regressions we ran.
+
+### 8. Plotting a residual chart
+
+```{python}
+C_health["res1"] = C_health["charges"] - C_health["pred_age_bmi_smoker"]
+
+(p9.ggplot(C_health, p9.aes(
+    x= "pred_age_bmi_smoker",
+    y= "res1"
+))
++p9.geom_hline(yintercept = 0, linetype = "dashed", color = "red")
++p9.geom_point()
+)
+```
+
+## Part Five: Full Exploration
+
+```{python}
+Xtr = x_train[["age", "bmi", "smoker_yes", "sex_female", "region_northwest"]]
+
+Final_LR = LinearRegression().fit(Xtr, y_train)
+Final_Y = Final_LR.predict(Xtr)
+
+C_health["pred_final"] = Final_Y
+C_health["res2"] = C_health["charges"] - C_health["pred_final"]
+```
+
+```{python}
+(p9.ggplot(C_health, p9.aes(
+    x= "pred_final",
+    y= "res2"
+))
++p9.geom_hline(yintercept = 0, linetype = "dashed", color = "red")
++p9.geom_point()
+)
+```
