@@ -1,0 +1,228 @@
+---
+title: 'PA 7.1: Cross Validation and Tuning'
+author: Lucas Calaff
+jupyter: python3
+format:
+  html:
+    toc: true
+    code-fold: true
+    theme: Darkly
+    highlight-style: breezedark
+    embed-resources: true
+execute:
+  enabled: true
+---
+
+
+```{python}
+import pandas as pd
+import numpy as np
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler, OneHotEncoder, PolynomialFeatures
+from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import train_test_split, cross_val_score, GridSearchCV
+from sklearn.compose import ColumnTransformer
+from sklearn.metrics import r2_score , mean_squared_error
+from sklearn.model_selection import cross_val_score
+```
+
+## Acticity 13.2.5: Using 4 Possible Housing Models
+
+```{python}
+housing = pd.read_csv("https://www.dropbox.com/scl/fi/g0n5le5p6fr136ggetfsf/AmesHousing.csv?rlkey=jlr9xtz1o6u5rghfo29a5c02f&dl=1")
+housing
+```
+
+### Pipeline 1
+
+```{python}
+ct = ColumnTransformer(
+  [
+    ("select", "passthrough", ["Gr Liv Area", "TotRms AbvGrd"])
+  ],
+  remainder = "drop"
+)
+
+lr_pipeline1 = Pipeline(
+  [("preprocessing", ct),
+  ("linear_regression", LinearRegression())]
+).set_output(transform="pandas")
+
+```
+
+### pipeline2
+
+```{python}
+ct2 = ColumnTransformer(
+    [
+    ("dummify", OneHotEncoder(sparse_output = False), ["Bldg Type"]),
+    ("standardize", StandardScaler(), ["Gr Liv Area", "TotRms AbvGrd"]),
+    ],
+    remainder = "drop"
+)
+
+lr_pipeline2 = Pipeline(
+  [("preprocessing", ct2),
+  ("linear_regression", LinearRegression())]
+).set_output(transform="pandas")
+```
+
+### Pipeline 3
+
+```{python}
+ct3 = ColumnTransformer(
+    [
+    ("dummify", OneHotEncoder(sparse_output = False), ["Bldg Type"]),
+    ("standardize", StandardScaler(), ["Gr Liv Area"]),
+    ]
+)
+
+ct_interaction = ColumnTransformer(
+    [
+      ("interaction1", PolynomialFeatures(interaction_only = True), ["standardize__Gr Liv Area", "dummify__Bldg Type_1Fam"]),
+      ("interaction2", PolynomialFeatures(interaction_only = True), ["standardize__Gr Liv Area", "dummify__Bldg Type_2fmCon"]),
+      ("interaction3", PolynomialFeatures(interaction_only = True), ["standardize__Gr Liv Area", "dummify__Bldg Type_Duplex"]),
+      ("interaction4", PolynomialFeatures(interaction_only = True), ["standardize__Gr Liv Area", "dummify__Bldg Type_Twnhs"]),
+      ("interaction5", PolynomialFeatures(interaction_only = True), ["standardize__Gr Liv Area", "dummify__Bldg Type_TwnhsE"])
+    ],
+      remainder= "drop"
+)
+
+lr_pipeline3 = Pipeline(
+  [("preprocessing", ct3),
+   ("interaction", ct_interaction),
+  ("linear_regression", LinearRegression())]
+).set_output(transform="pandas")
+```
+
+### Pipeline 4
+
+```{python}
+ct_poly = ColumnTransformer(
+    [
+    ("dummify", OneHotEncoder(sparse_output = False), ["Bldg Type"]),
+    ("polynomial1", PolynomialFeatures(degree= 5), ["TotRms AbvGrd"]),
+    ("polynomial2", PolynomialFeatures(degree= 5), ["Gr Liv Area"])
+    ],
+    remainder = "drop"
+)
+
+lr_pipeline4 = Pipeline(
+  [("preprocessing", ct_poly),
+  ("linear_regression", LinearRegression())]
+  ).set_output(transform="pandas")
+```
+
+```{python}
+X = housing.drop("SalePrice", axis = 1)
+y = housing["SalePrice"]
+
+X_train, X_test, y_train, y_test = train_test_split(X, y)
+```
+
+```{python}
+root_list = []
+```
+
+### Fitting model1
+
+```{python}
+fitted_lr1 = lr_pipeline1.fit(X_train, y_train)
+
+pred1 = fitted_lr1.predict(X_test)
+
+rmse1 = np.sqrt(mean_squared_error(y_test, pred1))
+root_list.append(rmse1)
+```
+
+### Fitting model2
+
+```{python}
+fitted_lr2 = lr_pipeline2.fit(X_train, y_train)
+
+pred2 = fitted_lr2.predict(X_test)
+
+rmse2 = np.sqrt(mean_squared_error(y_test, pred2))
+root_list.append(rmse2)
+```
+
+### Fitting model3
+
+```{python}
+fitted_lr3 = lr_pipeline3.fit(X_train, y_train)
+
+pred3 = fitted_lr3.predict(X_test)
+
+rmse3 = np.sqrt(mean_squared_error(y_test, pred3))
+root_list.append(rmse3)
+```
+
+### Fitting model4
+
+```{python}
+fitted_lr4 = lr_pipeline4.fit(X_train, y_train)
+
+pred4 = fitted_lr4.predict(X_test)
+
+rmse4 = np.sqrt(mean_squared_error(y_test, pred4))
+root_list.append(rmse4)
+```
+
+### Finding the minimum MSE out of all our models 
+
+```{python}
+min(root_list)
+```
+
+Based on the output we can determine that model 3 performed the best with the lowest root MSE out of all of the models we fitted using this dataset  
+
+## 13.3.1: Cross Val Score 
+
+```{python}
+Scores1 = (-(cross_val_score(lr_pipeline1, X, y, cv=5,scoring = "neg_root_mean_squared_error"))).mean()
+Scores2 = (-(cross_val_score(lr_pipeline2, X, y, cv=5,scoring = "neg_root_mean_squared_error"))).mean()
+Scores3 = (-(cross_val_score(lr_pipeline3, X, y, cv=5,scoring = "neg_root_mean_squared_error"))).mean()
+Scores4 = (-(cross_val_score(lr_pipeline4, X, y, cv=5,scoring = "neg_root_mean_squared_error"))).mean()
+min([Scores1,Scores2,Scores3,Scores4])
+```
+
+Using cross validation we again found that the third model had the best root mean squared error avg across the 5 cross validations that we perfromed on each of the models
+
+## 13.3.3: 100 modeling options for house price 
+
+```{python}
+ct_poly2 = ColumnTransformer(
+    [
+    ("dummify", OneHotEncoder(sparse_output = False), ["Bldg Type"]),
+    ("polynomial1", PolynomialFeatures(), ["TotRms AbvGrd"]),
+    ("polynomial2", PolynomialFeatures(), ["Gr Liv Area"])
+    ], 
+    remainder = "drop"
+)
+
+lr_pipeline_search = Pipeline(
+  [("preprocessing", ct_poly2),
+  ("linear_regression", LinearRegression())]
+  ).set_output(transform="pandas")
+```
+
+```{python}
+degrees = {'preprocessing__polynomial1__degree': np.arange(1,10),
+           'preprocessing__polynomial2__degree': np.arange(1,10)}
+
+gscv = GridSearchCV(lr_pipeline_search, degrees, cv=5, scoring='r2')
+gscv_fitted = gscv.fit(X,y)
+```
+
+```{python}
+models_fitted = pd.DataFrame(data = {"degrees":gscv_fitted.cv_results_["params"],
+                                    "scores": gscv_fitted.cv_results_['mean_test_score']})
+
+print(models_fitted.loc[models_fitted["scores"].idxmax(), "degrees"])
+models_fitted.loc[models_fitted["scores"].idxmax(), "scores"]
+```
+
+Q1: The model with degree 1 for room and degree 3 for gr liv area peformed the best out of all the models we tested with a r2 score of .558 meaning that 55.8% of the data can be explained based upon this specific model
+
+Q2: The downside of using these models is that they take up a lot of memory as we are trying all posible combinations which means their are various results we need to compute for. one way to scale this down would be to use less cross validating values as we are testing more models so we are likely to see less variability. 
+
