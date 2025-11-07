@@ -1,0 +1,226 @@
+---
+title: 'PA 7.2: Penalized Regression'
+author: Lucas Calaff
+jupyter: python3
+format:
+  html:
+    toc: true
+    code-fold: true
+    theme: Darkly
+    highlight-style: breezedark
+    embed-resources: true
+execute:
+  enabled: true
+---
+
+
+```{python}
+import pandas as pd
+import numpy as np
+from sklearn.pipeline import Pipeline
+from sklearn.compose import make_column_selector, ColumnTransformer
+from sklearn.preprocessing import StandardScaler, OneHotEncoder, PolynomialFeatures
+from sklearn.linear_model import LinearRegression, Ridge, Lasso, ElasticNet 
+from sklearn.model_selection import train_test_split, cross_val_score, GridSearchCV
+from sklearn.metrics import r2_score
+import plotnine as p9
+from mizani.transforms import modulus_trans 
+```
+
+## 14.2: Ridge Regression 
+
+```{python}
+# Read the data
+ames = pd.read_csv(r"https://www.dropbox.com/scl/fi/g0n5le5p6fr136ggetfsf/AmesHousing.csv?rlkey=jlr9xtz1o6u5rghfo29a5c02f&dl=1")
+
+# Get rid of columns with mostly NaN values
+good_cols = ames.isna().sum() < 100
+ames = ames.loc[:,good_cols]
+
+# Drop other NAs
+ames = ames.dropna()
+```
+
+```{python}
+X = ames.drop(["SalePrice", "Order", "PID"], axis = 1)
+y = ames["SalePrice"]
+
+
+ct = ColumnTransformer(
+  [
+    ("dummify", 
+    OneHotEncoder(sparse_output = False, handle_unknown='ignore'),
+    make_column_selector(dtype_include=object)),
+    ("standardize", 
+    StandardScaler(), 
+    make_column_selector(dtype_include=np.number))
+  ],
+  remainder = "passthrough"
+)
+
+lr_pipeline_1 = Pipeline(
+  [("preprocessing", ct),
+  ("linear_regression", LinearRegression())]
+)
+```
+
+```{python}
+pipe1_score = cross_val_score(lr_pipeline_1, X, y, cv = 5, scoring = "r2").max()
+pipe1_score
+```
+
+```{python}
+lr_pipeline_2 = Pipeline(
+  [("preprocessing", ct),
+  ("Ridge", Ridge(alpha = 1))]
+)
+```
+
+```{python}
+pipe2_score = cross_val_score(lr_pipeline_2, X, y, cv = 5, scoring = "r2").max()
+pipe2_score
+```
+
+```{python}
+max(pipe1_score, pipe2_score)
+```
+
+The results of our cross validation indicate that the model using ridge regression performed better than the one that used ols, although the difference between the two models is very slight. 
+
+```{python}
+lr_fitted1 = lr_pipeline_1.fit(X, y)
+xvals_1 = lr_fitted1.named_steps["linear_regression"].coef_
+```
+
+```{python}
+lr_fitted2 = lr_pipeline_2.fit(X,y)
+xvals_2 = lr_fitted2.named_steps["Ridge"].coef_
+```
+
+```{python}
+(p9.ggplot(p9.aes(xvals_1, xvals_2))
++p9.scale_x_continuous(trans=modulus_trans(0.75))
++p9.scale_y_continuous(trans=modulus_trans(0.75))
++p9.xlab("OLS Coefficients")
++p9.ylab("Ridge Coefficients")
++p9.geom_point(size = 2, alpha = 0.6)
+)
+```
+
+## 14.2.1: Testing Lambdas on log scale
+
+```{python}
+param_grid1 = {'Ridge__alpha': [0.001, 0.01, 0.1, 1, 10]}
+
+grid_search1 = GridSearchCV(estimator = lr_pipeline_2,
+                           param_grid = param_grid1,
+                           cv=5, 
+                           scoring='r2')
+```
+
+```{python}
+fitted_grid1 = grid_search1.fit(X, y)
+```
+
+```{python}
+models_fitted = pd.DataFrame(data = {"alphas":fitted_grid1.cv_results_["params"],
+                                    "scores": fitted_grid1.cv_results_['mean_test_score']})
+models_fitted
+```
+
+## 14.3.1: Lasso Pipeline and comparison
+
+```{python}
+lr_pipeline_3 = Pipeline(
+  [("preprocessing", ct),
+  ("Lasso", Lasso(alpha = 1))]
+)
+
+param_grid2 = {'Lasso__alpha': [0.001, 0.01, 0.1, 1, 10]}
+
+grid_search2 = GridSearchCV(estimator = lr_pipeline_3,
+                           param_grid = param_grid2,
+                           cv=5, 
+                           scoring='r2')
+```
+
+```{python}
+fitted_grid2 = grid_search2.fit(X, y)
+```
+
+```{python}
+models_fitted2 = pd.DataFrame(data = {"alphas":fitted_grid2.cv_results_["params"],
+                                    "scores": fitted_grid2.cv_results_['mean_test_score']})
+models_fitted2
+```
+
+```{python}
+lr_fitted3 = lr_pipeline_3.fit(X,y)
+xvals_3 = lr_fitted3.named_steps["Lasso"].coef_
+```
+
+```{python}
+(p9.ggplot(p9.aes(xvals_3, xvals_2))
++p9.scale_x_continuous(trans=modulus_trans(0.75))
++p9.scale_y_continuous(trans=modulus_trans(0.75))
++p9.xlab("Lasso Coefficients")
++p9.ylab("Ridge Coefficients")
++p9.geom_point(size = 2, alpha = 0.6)
+)
+```
+
+```{python}
+(p9.ggplot(p9.aes(xvals_3, xvals_1))
++p9.scale_x_continuous(trans=modulus_trans(0.75))
++p9.scale_y_continuous(trans=modulus_trans(0.75))
++p9.xlab("Lasso Coefficients")
++p9.ylab("OLS Coefficients")
++p9.geom_point(size = 2, alpha = 0.6)
+)
+```
+
+## 14.3.3: Elastic Net Pipeline and Comparison
+
+```{python}
+lr_pipeline_4 = Pipeline(
+  [("preprocessing", ct),
+  ("elastic_net", ElasticNet(alpha=1, l1_ratio=0.5))]
+)
+
+param_grid3 = {'elastic_net__alpha': [0.001, 0.01, 0.1, 1, 10],
+              "elastic_net__l1_ratio": np.arange(0.0, 1.2, 0.2)}
+
+grid_search3 = GridSearchCV(estimator = lr_pipeline_4,
+                           param_grid = param_grid3,
+                           cv=5, 
+                           scoring='r2')
+```
+
+```{python}
+lr_fitted4 = lr_pipeline_4.fit(X,y)
+xvals_4 = lr_fitted4.named_steps["elastic_net"].coef_
+```
+
+```{python}
+fitted_grid3 = grid_search3.fit(X, y)
+```
+
+```{python}
+models_fitted3 = pd.DataFrame(data = {"alphas":fitted_grid3.cv_results_["params"],
+                                    "scores": fitted_grid3.cv_results_['mean_test_score']})
+
+print(models_fitted3.loc[models_fitted3["scores"].idxmax(), "alphas"])
+models_fitted3.loc[models_fitted3["scores"].idxmax(), "scores"]
+```
+
+```{python}
+xvals_4 = lr_fitted4.named_steps["elastic_net"].coef_
+```
+
+```{python}
+coef_df = pd.DataFrame(data = {"OLS_Coef": xvals_1, 
+                     "Ridge_Coef": xvals_2, 
+                     "Lasso_Coef": xvals_3, 
+                     "Elastic_net_Coef": xvals_4})
+coef_df
+```
