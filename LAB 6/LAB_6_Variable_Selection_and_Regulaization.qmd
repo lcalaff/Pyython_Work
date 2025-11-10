@@ -13,6 +13,8 @@ execute:
   enabled: true
 ---
 
+<https://github.com/lcalaff/Pyython_Work/tree/main/LAB%206>
+
 ```{python}
 import pandas as pd
 import numpy as np
