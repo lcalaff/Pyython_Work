@@ -1,0 +1,796 @@
+---
+title: 'LAB 6: Variable Selection and Regularization'
+author: Lucas Calaff
+jupyter: python3
+format:
+  html:
+    toc: true
+    code-fold: true
+    theme: Darkly
+    highlight-style: breezedark
+    embed-resources: true
+execute:
+  enabled: true
+---
+
+```{python}
+import pandas as pd
+import numpy as np
+from sklearn.pipeline import Pipeline
+from sklearn.compose import make_column_selector, ColumnTransformer
+from sklearn.preprocessing import StandardScaler, OneHotEncoder, PolynomialFeatures
+from sklearn.linear_model import LinearRegression, Ridge, Lasso, ElasticNet 
+from sklearn.model_selection import train_test_split, cross_val_score, GridSearchCV
+from sklearn.metrics import r2_score
+import plotnine as p9
+from mizani.transforms import modulus_trans 
+from sklearn.feature_selection import SelectFromModel
+```
+
+## Part 0: Data Setup
+
+```{python}
+hit = pd.read_csv(r"C:\Users\ldcal\OneDrive\Desktop\Cal Poly Courses\Fall\GSB-S544\Coding Work\Pyython_Work\LAB 6\Hitters.csv")
+
+hit_na = hit.dropna()
+hit_clean = pd.get_dummies(hit_na)
+```
+
+## Part 1: Different Model Specs
+
+### A. Regression without Regularization
+
+#### 1. Pipeline that includes all columns as predictors and does OLS
+
+```{python}
+ct = ColumnTransformer(
+    [("num", StandardScaler(), make_column_selector(dtype_include=np.number)),
+    ("cat", OneHotEncoder(handle_unknown="ignore", sparse_output = False)
+    , make_column_selector(dtype_exclude=np.number)),  
+    ], 
+    remainder = "drop" 
+
+).set_output(transform = "pandas" ,)
+
+
+lr_pipeline1 = Pipeline(
+  [("preprocessing", ct),
+  ("linear_regression", LinearRegression())]
+).set_output(transform="pandas")
+```
+
+#### 2. Fit pipeline to full dataset and interpret
+
+```{python}
+X_A = hit_clean.drop("Salary", axis = 1)
+y_A = hit_clean["Salary"]
+
+X_A_train, X_A_test, y_A_train, y__A_test = train_test_split(X_A, y_A)
+```
+
+```{python}
+fitted_lr1_A = lr_pipeline1.fit(X_A_train, y_A_train)
+
+fit_lr1_A_feat= fitted_lr1_A["linear_regression"].feature_names_in_
+fit_lr1_A_coefs = fitted_lr1_A["linear_regression"].coef_
+
+lr1_A_coefs = pd.DataFrame({"feature": fit_lr1_A_feat, "coef": fit_lr1_A_coefs})
+lr1_A_coefs
+```
+
+Some of the most important coefficients appear to be the number of hits during a players career which makes sense where the more a player is hitting a baseball, the higher their salary is likely to be. Also an interesting observation is the more a player is at bat the less they get paid, which doesn't logically make sense as players who are on offense are more likely to win games. career runs also had a very positive impact as runs are very important to the game and so can be highly valued.
+
+#### 3. Cross validation to estimate the MSE if we used this pipeline to predict 1989 salaries
+
+```{python}
+(-(cross_val_score(lr_pipeline1, X_A, y_A, cv=5,scoring = "neg_root_mean_squared_error"))).mean()
+```
+
+### B. Ridge Regression
+
+#### 1. Create pipeline to preform ordinary ridge regression
+
+```{python}
+R_pipeline = Pipeline(
+  [("preprocessing", ct),
+  ("ridge", Ridge(alpha = 200))]
+).set_output(transform="pandas")
+```
+
+#### 2. Use Cross Val to tune the lambda hyper parameter
+
+```{python}
+alphas_tune = {"ridge__alpha": [0.001, 0.01, 0.1, 1, 10,200]}
+
+grid_search1 = GridSearchCV(estimator = R_pipeline,
+                           param_grid = alphas_tune,
+                           cv=5, 
+                           scoring='r2')
+```
+
+```{python}
+fitted_grid1 = grid_search1.fit(X_A, y_A)
+```
+
+```{python}
+ridge_tune_1 = pd.DataFrame(data = {"alphas":fitted_grid1.cv_results_["params"],
+                                    "scores": fitted_grid1.cv_results_['mean_test_score']})
+
+print("the lambda with the highest score for ridge regression was 200 based on the alphas we tested")
+ridge_tune_1
+```
+
+#### 3. Fit the pipeline with chosen lambda on full dataset and interpret
+
+```{python}
+fitted_R1 = R_pipeline.fit(X_A_train, y_A_train)
+
+fit_R1_feat= fitted_R1["ridge"].feature_names_in_
+fit_R1_coefs = fitted_R1["ridge"].coef_
+
+R1_A_coefs = pd.DataFrame({"feature": fit_R1_feat, "coef": fit_R1_coefs})
+R1_A_coefs
+```
+
+In our ridge regression put outs was one of the most impactful coefficients with the salary increase being the most for every category, possibly showing the models use of defensive stats toward salary values. One thing to note on these coefficients is that they are not as high as the previous model meaning that we ether have a high y intercepts or some miss trained models.
+
+#### 4. MSE Expected if used to predict 1989 salaries
+
+```{python}
+R_og_MSE = (-(cross_val_score(R_pipeline, X_A, y_A, cv=5,scoring = "neg_root_mean_squared_error"))).mean()
+```
+
+### C. Lasso Regression
+
+#### 1. Create a Pipeline for all columns and performs Ordinary Lasso Regression
+
+```{python}
+L_pipeline = Pipeline(
+  [("preprocessing", ct),
+  ("Lasso", Lasso(alpha = 20))]
+).set_output(transform="pandas")
+```
+
+#### 2. Cross val to find the best lambda
+
+```{python}
+alphas_tune2 = {"Lasso__alpha": [0.001, 0.01, 0.1, 1, 10,20]}
+
+grid_search2 = GridSearchCV(estimator = L_pipeline,
+                           param_grid = alphas_tune2,
+                           cv=5, 
+                           scoring='r2')
+```
+
+```{python}
+fitted_grid2 = grid_search2.fit(X_A, y_A)
+```
+
+```{python}
+lasso_tune_2 = pd.DataFrame(data = {"alphas":fitted_grid2.cv_results_["params"],
+                                    "scores": fitted_grid2.cv_results_['mean_test_score']})
+
+
+print("the lambda paramater that worked best for this model was 20")
+lasso_tune_2
+```
+
+#### 3. Fit Pipeline with chosen lambda and interpret coefficients
+
+```{python}
+pd.set_option('display.float_format', '{:.6f}'.format)
+```
+
+```{python}
+fitted_L1 = L_pipeline.fit(X_A_train, y_A_train)
+
+fit_L1_feat= fitted_L1["Lasso"].feature_names_in_
+fit_L1_coefs = fitted_L1["Lasso"].coef_
+
+L1_A_coefs = pd.DataFrame({"feature": fit_L1_feat, "coef": fit_L1_coefs})
+L1_A_coefs
+```
+
+This Lasso regression had a lot of zero values indicating that their the regression did not do a good job at fitting to our data. Some of the coefficients that were the most surprising were the runs column which played a factor in the previous model but not in this one. it is also worth noticing that the categorical variables all had very week effects on salary indicating a faulty model for this data.
+
+#### 4. Reporting the MSE for the pipeline predicting salaries in 1989
+
+```{python}
+L_og_MSE = (-(cross_val_score(L_pipeline, X_A, y_A, cv=5,scoring = "neg_root_mean_squared_error"))).mean()
+```
+
+### D. Elastic Net
+
+#### 1. Create a Pipeline For all Columns that performs Elastic Net Regression
+
+```{python}
+EN_pipeline = Pipeline(
+  [("preprocessing", ct),
+  ("elastic_net", ElasticNet(alpha = 1, l1_ratio = 0.1))]
+).set_output(transform="pandas")
+```
+
+#### 2. Cross Val Tun for both parameters
+
+```{python}
+param_grid3 = {'elastic_net__alpha': [0.001, 0.01, 0.1, 1, 2],
+              "elastic_net__l1_ratio": [0.001, 0.01, 0.1, 1]}
+
+
+grid_search3 = GridSearchCV(estimator = EN_pipeline,
+                           param_grid = param_grid3,
+                           cv=5, 
+                           scoring='r2')
+```
+
+```{python}
+fitted_grid3 = grid_search3.fit(X_A, y_A)
+```
+
+```{python}
+lasso_tune_3 = pd.DataFrame(data = {"alphas":fitted_grid3.cv_results_["params"],
+                                    "scores": fitted_grid3.cv_results_['mean_test_score']})
+
+print(lasso_tune_3.loc[lasso_tune_3["scores"].idxmax(), "alphas"])
+lasso_tune_3.loc[lasso_tune_3["scores"].idxmax(), "scores"]
+```
+
+#### 3. Fit the Pipeline and Interprect coefficients
+
+```{python}
+fitted_EN1 = EN_pipeline.fit(X_A_train, y_A_train)
+
+fit_EN1_feat= fitted_EN1["elastic_net"].feature_names_in_
+fit_EN1_coefs = fitted_EN1["elastic_net"].coef_
+
+EN1_A_coefs = pd.DataFrame({"feature": fit_EN1_feat, "coef": fit_EN1_coefs})
+EN1_A_coefs
+```
+
+This model performed very similar to the Ridge regression model with import coefficients being put outs and Cruns and had slightly higher salary rises per coefficient indicating that this model may fit the salaries better than the other models.
+
+#### 4. Reporting MSE using our pipeline for salaries in 1989
+
+```{python}
+EN_og_MSE = (-(cross_val_score(EN_pipeline, X_A, y_A, cv=5,scoring = "neg_root_mean_squared_error"))).mean()
+```
+
+## Part 2: Variable Selection
+
+### A. Deciding on Top Variables to use
+
+```{python}
+top5_lr = (lr1_A_coefs
+        .assign(abs_coef=lambda d: d["coef"].abs())
+        .assign(model = "Linear Regression")
+        .nlargest(5, "abs_coef"))
+
+top5_R = (R1_A_coefs
+        .assign(abs_coef=lambda d: d["coef"].abs())
+        .assign(model = "Ridge")
+        .nlargest(5, "abs_coef"))  
+
+top6_L = (L1_A_coefs
+        .assign(abs_coef=lambda d: d["coef"].abs())
+        .assign(model = "Lasso")
+        .nlargest(6, "abs_coef"))
+  
+
+top5_EN = (EN1_A_coefs
+        .assign(abs_coef=lambda d: d["coef"].abs())
+        .assign(model = "Elastic Net")
+        .nlargest(5, "abs_coef"))
+
+top5_num = pd.concat([top5_lr, top5_R, top6_L, top5_EN], ignore_index=True)
+
+top5_num.groupby("feature")["abs_coef"].mean().nlargest(1)
+```
+
+Based on the 4 models average coefficient values we can determine the top numeric value to be CAtBat, indicating this as the most important value for all of the models
+
+```{python}
+top5_num.groupby("feature")["abs_coef"].mean().nlargest(5)
+```
+
+Using the same Framework we determined that the above 5 features will be the most important for our models and will be used to run regressions with.
+
+```{python}
+cat_lr = (lr1_A_coefs
+        .assign(abs_coef=lambda d: d["coef"].abs())
+        .assign(model = "Linear Regression")
+        .loc[lambda d: d["feature"].str.startswith("cat__")]
+)
+
+cat_r = (R1_A_coefs
+        .assign(abs_coef=lambda d: d["coef"].abs())
+        .assign(model = "Ridge")
+        .loc[lambda d: d["feature"].str.startswith("cat__")]
+)
+
+cat_L = (L1_A_coefs
+        .assign(abs_coef=lambda d: d["coef"].abs())
+        .assign(model = "Lasso")
+        .loc[lambda d: d["feature"].str.startswith("cat__")]
+)
+
+cat_EN = (EN1_A_coefs
+        .assign(abs_coef=lambda d: d["coef"].abs())
+        .assign(model = "Elastic Net")
+        .loc[lambda d: d["feature"].str.startswith("cat__")]
+)
+
+categorical_vars = pd.concat([cat_lr, cat_r, cat_L, cat_EN], ignore_index=True)
+
+categorical_vars.groupby("feature")["abs_coef"].mean().nlargest(1)
+```
+
+Looking at only categorical variables we took the means out of all 4 models and determined that the Division_E_False variable is the most impactful on all of our models and will be used in further analysis.
+
+### B. Pipeline setup and Tuning
+
+Top 1
+
+```{python}
+ct_top1 = ColumnTransformer(
+    [("S",StandardScaler(), ["CAtBat"])],
+    remainder = "drop"
+).set_output(transform="pandas")
+
+lr_pipeline_top1 = Pipeline(
+  [("preprocessing", ct_top1),
+  ("linear_regression", LinearRegression())]
+).set_output(transform="pandas")
+
+R_pipeline_top1 = Pipeline(
+  [("preprocessing", ct_top1),
+  ("ridge", Ridge(alpha = 1))]
+).set_output(transform="pandas")
+
+L_pipeline_top1 = Pipeline(
+  [("preprocessing", ct_top1),
+  ("Lasso", Lasso(alpha = 1))]
+).set_output(transform="pandas")
+
+EN_pipeline_top1 = Pipeline(
+  [("preprocessing", ct_top1),
+  ("elastic_net", ElasticNet(alpha = 1, l1_ratio=0.5))]
+).set_output(transform="pandas")
+```
+
+```{python}
+top1_tune_R_top1 =  {"ridge__alpha": [0.001, 0.01, 0.1, 1, 10,15]}
+
+grid_search_R_top1 = GridSearchCV(estimator = R_pipeline_top1,
+                           param_grid = top1_tune_R_top1,
+                           cv=5, 
+                           scoring='r2')
+
+fitted_grid_R_top1 = grid_search_R_top1.fit(X_A, y_A)
+ridge_tune_top1 = pd.DataFrame(data = {"alphas":fitted_grid_R_top1.cv_results_["params"],
+                                    "scores": fitted_grid_R_top1.cv_results_['mean_test_score']})
+ridge_tune_top1
+```
+
+using alpha = 15 for ridge top 1
+
+```{python}
+top1_tune_L_top1 =  {"Lasso__alpha": [0.001, 0.01, 0.1, 1, 10,12]}
+
+grid_search_L_top1 = GridSearchCV(estimator = L_pipeline_top1,
+                           param_grid = top1_tune_L_top1,
+                           cv=5, 
+                           scoring='r2')
+
+fitted_grid_L_top1 = grid_search_L_top1.fit(X_A, y_A)
+Lasso_tune_top1 = pd.DataFrame(data = {"alphas":fitted_grid_L_top1.cv_results_["params"],
+                                    "scores": fitted_grid_L_top1.cv_results_['mean_test_score']})
+Lasso_tune_top1
+```
+
+using alpha = 12 for Lasso top 1
+
+```{python}
+top1_tune_EN_top1 =  {'elastic_net__alpha': [0.001, 0.01, 0.1, 1, 10],
+                    "elastic_net__l1_ratio": [0.001, 0.01, 0.1, 1]}
+
+grid_search_EN_top1 = GridSearchCV(estimator = EN_pipeline_top1,
+                           param_grid = top1_tune_EN_top1,
+                           cv=5, 
+                           scoring='r2')
+
+fitted_grid_EN_top1 = grid_search_EN_top1.fit(X_A, y_A)
+EN_tune_top1 = pd.DataFrame(data = {"alphas":fitted_grid_EN_top1.cv_results_["params"],
+                                    "scores": fitted_grid_EN_top1.cv_results_['mean_test_score']})
+
+
+print(EN_tune_top1.loc[EN_tune_top1["scores"].idxmax(), "alphas"])
+EN_tune_top1.loc[EN_tune_top1["scores"].idxmax(), "scores"]
+```
+
+using alpha = 0.1 and l1_ratio = 0.1 for elastic net top 1
+
+Top 5
+
+```{python}
+ct_top5 = ColumnTransformer(
+    [("S", StandardScaler(), ["CAtBat","CWalks", "Hits","CRuns","CRBI"])],
+    remainder = "drop"
+).set_output(transform="pandas")
+
+lr_pipeline_top5 = Pipeline(
+  [("preprocessing", ct_top5),
+  ("linear_regression", LinearRegression())]
+).set_output(transform="pandas")
+
+R_pipeline_top5 = Pipeline(
+  [("preprocessing", ct_top5),
+  ("ridge", Ridge(alpha = 1))]
+).set_output(transform="pandas")
+
+L_pipeline_top5 = Pipeline(
+  [("preprocessing", ct_top5),
+  ("Lasso", Lasso(alpha = 1))]
+).set_output(transform="pandas")
+
+EN_pipeline_top5 = Pipeline(
+  [("preprocessing", ct_top5),
+  ("elastic_net", ElasticNet(alpha = 1, l1_ratio=0.5))]
+).set_output(transform="pandas")
+```
+
+```{python}
+tune_R_top5 =  {"ridge__alpha": [0.001, 0.01, 0.1, 1, 50,60]}
+
+grid_search_R_top5 = GridSearchCV(estimator = R_pipeline_top5,
+                           param_grid = tune_R_top5,
+                           cv=5, 
+                           scoring='r2')
+
+fitted_grid_R_top5 = grid_search_R_top5.fit(X_A, y_A)
+ridge_tune_top5 = pd.DataFrame(data = {"alphas":fitted_grid_R_top5.cv_results_["params"],
+                                    "scores": fitted_grid_R_top5.cv_results_['mean_test_score']})
+ridge_tune_top5
+```
+
+using alpha = 60 for ridge top 5
+
+```{python}
+tune_L_top5 =  {"Lasso__alpha": [0.001, 0.01, 0.1, 1, 2,3]}
+
+grid_search_L_top5 = GridSearchCV(estimator = L_pipeline_top5,
+                           param_grid = tune_L_top5,
+                           cv=5, 
+                           scoring='r2')
+
+fitted_grid_L_top5 = grid_search_L_top5.fit(X_A, y_A)
+Lasso_tune_top5 = pd.DataFrame(data = {"alphas":fitted_grid_L_top5.cv_results_["params"],
+                                    "scores": fitted_grid_L_top5.cv_results_['mean_test_score']})
+Lasso_tune_top5
+```
+
+using alpha = 2 for Lasso top 5
+
+```{python}
+tune_EN_top5 =  {'elastic_net__alpha': [0.001, 0.01, 0.1, 1, 10],
+                    "elastic_net__l1_ratio": [0.001, 0.01, 0.1, 1]}
+
+grid_search_EN_top5 = GridSearchCV(estimator = EN_pipeline_top5,
+                           param_grid = tune_EN_top5,
+                           cv=5, 
+                           scoring='r2')
+
+fitted_grid_EN_top5 = grid_search_EN_top5.fit(X_A, y_A)
+EN_tune_top5 = pd.DataFrame(data = {"alphas":fitted_grid_EN_top5.cv_results_["params"],
+                                    "scores": fitted_grid_EN_top5.cv_results_['mean_test_score']})
+
+
+print(EN_tune_top5.loc[EN_tune_top5["scores"].idxmax(), "alphas"])
+EN_tune_top5.loc[EN_tune_top5["scores"].idxmax(), "scores"]
+```
+
+using alpha = 0.01 and l1_ratio = 0.001 for elastic net top 5
+
+Categorical
+
+```{python}
+ct_cat = ColumnTransformer(
+    [("S",StandardScaler(), ["CAtBat","CWalks", "Hits","CRuns","CRBI"]),
+     ("C", OneHotEncoder(sparse_output = False), ["Division_E"])],
+    remainder = "drop"
+).set_output(transform="pandas")
+
+lr_pipeline_cat = Pipeline(
+  [("preprocessing", ct_cat),
+  ("linear_regression", LinearRegression())]
+).set_output(transform="pandas")
+
+R_pipeline_cat = Pipeline(
+  [("preprocessing", ct_cat),
+  ("ridge", Ridge(alpha = 1))]
+).set_output(transform="pandas")
+
+L_pipeline_cat = Pipeline(
+  [("preprocessing", ct_cat),
+  ("Lasso", Lasso(alpha = 1))]
+).set_output(transform="pandas")
+
+EN_pipeline_cat = Pipeline(
+  [("preprocessing", ct_cat),
+  ("elastic_net", ElasticNet(alpha = 1, l1_ratio=0.5))]
+).set_output(transform="pandas")
+```
+
+```{python}
+tune_R_cat =  {"ridge__alpha": [0.001, 0.01, 0.1, 1, 50,65]}
+
+grid_search_R_cat = GridSearchCV(estimator = R_pipeline_cat,
+                           param_grid = tune_R_cat,
+                           cv=5, 
+                           scoring='r2')
+
+fitted_grid_R_cat = grid_search_R_cat.fit(X_A, y_A)
+ridge_tune_cat = pd.DataFrame(data = {"alphas":fitted_grid_R_cat.cv_results_["params"],
+                                    "scores": fitted_grid_R_cat.cv_results_['mean_test_score']})
+ridge_tune_cat
+```
+
+using alpha = 65 for ridge categorical
+
+```{python}
+tune_L_cat =  {"Lasso__alpha": [0.001, 0.01, 0.1, 1, 50,65]}
+
+grid_search_L_cat = GridSearchCV(estimator = L_pipeline_cat,
+                           param_grid = tune_L_cat,
+                           cv=5, 
+                           scoring='r2')
+
+fitted_grid_L_cat = grid_search_L_cat.fit(X_A, y_A)
+Lasso_tune_cat = pd.DataFrame(data = {"alphas":fitted_grid_L_cat.cv_results_["params"],
+                                    "scores": fitted_grid_L_cat.cv_results_['mean_test_score']})
+Lasso_tune_cat
+```
+
+using alpha = 0.01 for Lasso categorical
+
+```{python}
+tune_EN_cat =  {'elastic_net__alpha': [0.001, 0.01, 0.1, 1, 10],
+                    "elastic_net__l1_ratio": [0.001, 0.01, 0.1, 1]}
+
+grid_search_EN_cat = GridSearchCV(estimator = EN_pipeline_cat,
+                           param_grid = tune_EN_cat,
+                           cv=5, 
+                           scoring='r2')
+
+fitted_grid_EN_cat = grid_search_EN_cat.fit(X_A, y_A)
+EN_tune_cat = pd.DataFrame(data = {"alphas":fitted_grid_EN_cat.cv_results_["params"],
+                                    "scores": fitted_grid_EN_cat.cv_results_['mean_test_score']})
+
+
+print(EN_tune_cat.loc[EN_tune_cat["scores"].idxmax(), "alphas"])
+EN_tune_cat.loc[EN_tune_cat["scores"].idxmax(), "scores"]
+```
+
+using alpha = 0.01 and l1_ratio = 0.001 for elastic net categorical
+
+### 1. Fitting and reporting MSE for Each Newly Tuned Model (top1)
+
+```{python}
+Tune_R_pipeline_top1 = Pipeline(
+  [("preprocessing", ct_top1),
+  ("ridge", Ridge(alpha = 15))]
+).set_output(transform="pandas")
+
+Tune_L_pipeline_top1 = Pipeline(
+  [("preprocessing", ct_top1),
+  ("Lasso", Lasso(alpha = 12))]
+).set_output(transform="pandas")
+
+Tune_EN_pipeline_top1 = Pipeline(
+  [("preprocessing", ct_top1),
+  ("elastic_net", ElasticNet(alpha = 0.1, l1_ratio=0.1))]
+).set_output(transform="pandas")
+```
+
+```{python}
+lr_top1_MSE = (-(cross_val_score(lr_pipeline_top1, X_A, y_A, cv=5,scoring = "neg_root_mean_squared_error"))).mean()
+R_top1_MSE = (-(cross_val_score(Tune_R_pipeline_top1, X_A, y_A, cv=5,scoring = "neg_root_mean_squared_error"))).mean()
+L_top1_MSE = (-(cross_val_score(Tune_L_pipeline_top1, X_A, y_A, cv=5,scoring = "neg_root_mean_squared_error"))).mean()
+EN_top1_MSE = (-(cross_val_score(Tune_EN_pipeline_top1, X_A, y_A, cv=5,scoring = "neg_root_mean_squared_error"))).mean()
+```
+
+```{python}
+for x in lr_top1_MSE, R_top1_MSE, L_top1_MSE, EN_top1_MSE:
+    print(x)
+min([lr_top1_MSE, R_top1_MSE, L_top1_MSE, EN_top1_MSE])
+```
+
+For the top 1 models the linear regression performed the best with an average MSE of 379.522
+
+### 2. Fitting and reporting MSE for Each Newly Tuned Model (top5)
+
+```{python}
+Tune_R_pipeline_top5 = Pipeline(
+  [("preprocessing", ct_top5),
+  ("ridge", Ridge(alpha = 60))]
+).set_output(transform="pandas")
+
+Tune_L_pipeline_top5 = Pipeline(
+  [("preprocessing", ct_top5),
+  ("Lasso", Lasso(alpha = 2))]
+).set_output(transform="pandas")
+
+Tune_EN_pipeline_top5 = Pipeline(
+  [("preprocessing", ct_top5),
+  ("elastic_net", ElasticNet(alpha = 0.01, l1_ratio=0.001))]
+).set_output(transform="pandas")
+```
+
+```{python}
+lr_top5_MSE = (-(cross_val_score(lr_pipeline_top5, X_A, y_A, cv=5,scoring = "neg_root_mean_squared_error"))).mean()
+R_top5_MSE = (-(cross_val_score(Tune_R_pipeline_top5, X_A, y_A, cv=5,scoring = "neg_root_mean_squared_error"))).mean()
+L_top5_MSE = (-(cross_val_score(Tune_L_pipeline_top5, X_A, y_A, cv=5,scoring = "neg_root_mean_squared_error"))).mean()
+EN_top5_MSE = (-(cross_val_score(Tune_EN_pipeline_top5, X_A, y_A, cv=5,scoring = "neg_root_mean_squared_error"))).mean()
+```
+
+```{python}
+for x in lr_top5_MSE, R_top5_MSE, L_top5_MSE, EN_top5_MSE:
+    print(x)
+min([lr_top5_MSE, R_top5_MSE, L_top5_MSE, EN_top5_MSE])
+```
+
+For the top 5 models the Elastic Net performed the best with an average MSE of 344.114
+
+### 3. Fitting and reporting MSE for Each Newly Tuned Model (Categorical)
+
+```{python}
+Tune_R_pipeline_cat = Pipeline(
+  [("preprocessing", ct_cat),
+  ("ridge", Ridge(alpha = 65))]
+).set_output(transform="pandas")
+
+Tune_L_pipeline_cat = Pipeline(
+  [("preprocessing", ct_cat),
+  ("Lasso", Lasso(alpha = 0.01))]
+).set_output(transform="pandas")
+
+Tune_EN_pipeline_cat = Pipeline(
+  [("preprocessing", ct_cat),
+  ("elastic_net", ElasticNet(alpha = 0.01, l1_ratio=0.001))]
+).set_output(transform="pandas")
+```
+
+```{python}
+lr_cat_MSE = (-(cross_val_score(lr_pipeline_cat, X_A, y_A, cv=5,scoring = "neg_root_mean_squared_error"))).mean()
+R_cat_MSE = (-(cross_val_score(Tune_R_pipeline_cat, X_A, y_A, cv=5,scoring = "neg_root_mean_squared_error"))).mean()
+L_cat_MSE = (-(cross_val_score(Tune_L_pipeline_cat, X_A, y_A, cv=5,scoring = "neg_root_mean_squared_error"))).mean()
+EN_cat_MSE = (-(cross_val_score(Tune_EN_pipeline_cat, X_A, y_A, cv=5,scoring = "neg_root_mean_squared_error"))).mean()
+```
+
+```{python}
+for x in lr_cat_MSE, R_cat_MSE, L_cat_MSE, EN_cat_MSE:
+    print(x)
+min([lr_cat_MSE, R_cat_MSE, L_cat_MSE, EN_cat_MSE])
+```
+
+For the categorical models the ridge regression performed the best with an average MSE of 342.493
+
+```{python}
+for x in lr_top1_MSE ,EN_top5_MSE, R_cat_MSE:
+    print(x)
+min([lr_top1_MSE ,EN_top5_MSE, R_cat_MSE])
+```
+
+Overall the best tuned pipeline based on average MSE in all of the variables tested was using ridge regression and a combination of categorical and top5 with an average MSE of 342.493
+
+## Part 3: Discussion
+
+### A. Ridge
+
+```{python}
+print(R1_A_coefs)
+```
+
+```{python}
+print(lr1_A_coefs)
+```
+
+```{python}
+pt3_R_fit_top1 = R_pipeline_top1.fit(X_A,y_A)
+print(pt3_R_fit_top1.named_steps["ridge"].coef_)
+
+pt3_lr_fit_top1 = lr_pipeline_top1.fit(X_A,y_A)
+print(pt3_lr_fit_top1.named_steps["linear_regression"].coef_)
+```
+
+```{python}
+pt3_R_fit_top5 = R_pipeline_top5.fit(X_A,y_A)
+print(pt3_R_fit_top5.named_steps["ridge"].coef_)
+
+pt3_lr_fit_top5 = lr_pipeline_top5.fit(X_A,y_A)
+print(pt3_lr_fit_top5.named_steps["linear_regression"].coef_)
+```
+
+```{python}
+pt3_R_fit_cat = R_pipeline_cat.fit(X_A,y_A)
+print(pt3_R_fit_cat.named_steps["ridge"].coef_)
+
+pt3_lr_fit_cat = lr_pipeline_cat.fit(X_A,y_A)
+print(pt3_lr_fit_cat.named_steps["linear_regression"].coef_)
+```
+
+Our top1 models for ols and ride were the most similar in the coefficient predictions and the least similar models were the base models fitted on all of the data rather than specific points. My interpretation is that we were overfilling the models with the original data causing for inaccurate data however not having enough data can also pose an issue with are overall interpretation of the results.
+
+### B. Lasso
+
+```{python}
+print(L1_A_coefs)
+```
+
+```{python}
+pt3_L_fit_top1 = L_pipeline_top1.fit(X_A,y_A)
+print(pt3_L_fit_top1.named_steps["Lasso"].coef_)
+```
+
+```{python}
+pt3_L_fit_top5 = L_pipeline_top5.fit(X_A,y_A)
+print(pt3_L_fit_top5.named_steps["Lasso"].coef_)
+```
+
+```{python}
+np.set_printoptions(suppress=True)
+```
+
+```{python}
+pt3_L_fit_cat = L_pipeline_cat.fit(X_A,y_A)
+print(pt3_L_fit_cat.named_steps["Lasso"].coef_)
+```
+
+```{python}
+for x in L_og_MSE, L_top1_MSE, L_top5_MSE, L_cat_MSE: 
+    print(x)
+```
+
+With the Lasso Model the lambda results changed between models likely due to the number of variable we were using as the more we put into the model the less it need to tune to make adjustments and get out the right results for. The MSE that Lasso performed the best was in our original model using all the data likely due to over fitting , however our categorical model preformed close in terms of MSE.
+
+### C. Elastic Net
+
+```{python}
+for x in EN_og_MSE, R_og_MSE, L_og_MSE:
+    print("Original MSE " + str(x))
+```
+
+```{python}
+for x in EN_top1_MSE, R_top1_MSE, L_top1_MSE:
+    print("top1 MSE " + str(x))
+```
+
+```{python}
+for x in EN_top5_MSE, R_top5_MSE, L_top5_MSE:
+    print("top5 MSE " + str(x))
+```
+
+```{python}
+for x in EN_cat_MSE, R_cat_MSE, L_cat_MSE:
+    print("cat MSE " + str(x))
+```
+
+Elastic Net when compared to our other modeling methods got the lowest MSE when using categorical pipelines and the all variables pipeline, likely due to needing mode data in order to generate a better score. This could also mean that the elastic net model performs better when there is a dummy variable present in the pipeline.
+
+## Part 4: Final Model
+
+```{python}
+Final_model_fit = Tune_R_pipeline_cat.fit(X_A, y_A)
+
+x_pred = Final_model_fit.named_steps["ridge"].coef_
+y_pred = Final_model_fit.predict(X_A)
+```
+
+```{python}
+(p9.ggplot(p9.aes(y= y_A, x = y_pred))
++p9.geom_point()
++p9.labs(title="Ridge pipeline predictions top5 numerical plus 1 catergoical",
+    x= "Predicted Salary", y = "Actual Salary")
+)
+```
+
+Overall this model doesn't predict the Salary perfectly but given accurate coefficients you can get a good estimate to a players salary based on the categorical variables provided. With more tuning to this model i believe it could have lots of significance and the MSE can be lowered with several adjustment and added methods. Based in the plot we can see that our model underestimates salary which but their are several points that are close enough to the original salary variable that we can see the significance of the model overall and why it was chosen over the other models we worked with throughout this lab.
