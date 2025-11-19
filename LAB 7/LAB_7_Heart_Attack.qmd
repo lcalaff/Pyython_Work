@@ -13,6 +13,8 @@ execute:
   enabled: true
 ---
 
+<https://github.com/lcalaff/Pyython_Work/tree/main/LAB%207>
+
 ## Part Zero: Import Statments and Data
 
 ```{python}
