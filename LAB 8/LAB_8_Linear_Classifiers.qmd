@@ -1,0 +1,704 @@
+---
+title: 'LAB 8: Linear Classifiers'
+author: Lucas Calaff
+jupyter: python3
+format:
+  html:
+    toc: true
+    code-fold: true
+    theme: Darkly
+    highlight-style: breezedark
+    embed-resources: true
+execute:
+  enabled: true
+---
+
+<>
+
+## Part Zero: Data and Import Statements
+
+```{python}
+import pandas as pd
+import numpy as np 
+import matplotlib.pyplot as plt
+
+from sklearn.pipeline import Pipeline
+from sklearn.compose import make_column_selector, ColumnTransformer
+from sklearn.preprocessing import StandardScaler, OneHotEncoder, PolynomialFeatures
+from sklearn.linear_model import LinearRegression, Ridge, Lasso, ElasticNet , LogisticRegression
+from sklearn.model_selection import train_test_split, cross_val_score, GridSearchCV, KFold
+from sklearn.metrics import r2_score,classification_report, f1_score
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+
+from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
+from sklearn.multiclass import OneVsRestClassifier
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.tree import DecisionTreeClassifier, plot_tree
+from sklearn.linear_model import LogisticRegression
+from sklearn.svm import SVC
+```
+
+```{python}
+Weed = pd.read_csv("https://www.dropbox.com/s/s2a1uoiegitupjc/cannabis_full.csv?raw=1")
+
+weed_clean = Weed.dropna()
+```
+
+## Part One: Binary Classification
+
+```{python}
+df_S_I = weed_clean[weed_clean["Type"].isin(["indica", "sativa"])]
+
+XSI = df_S_I.drop(["Type", "Strain", "Effects", "Flavor"], axis = 1)
+ySI = df_S_I["Type"]
+
+ct = ColumnTransformer(
+  [
+    ("dummify", 
+    OneHotEncoder(sparse_output = False, handle_unknown='ignore'),
+    make_column_selector(dtype_include=object)),],
+  remainder = "passthrough"
+)
+```
+
+### Q1: LDA
+
+```{python}
+LDA_Pipe = Pipeline(
+  [("preprocessing", ct),
+  ("LDA", LinearDiscriminantAnalysis())]
+)
+
+param_grid_LDA = [
+    {
+        "LDA__solver": ["svd"],
+        "LDA__n_components": [None, 1],
+    },
+]
+
+grid_LDA = GridSearchCV(LDA_Pipe, param_grid_LDA, cv = 5, scoring = "accuracy")
+
+test_LDA_fit = grid_LDA.fit(XSI, ySI)
+```
+
+```{python}
+test_LDA_fit.best_params_
+```
+
+```{python}
+LDA = pd.DataFrame(grid_LDA.cv_results_)[["params", "mean_test_score"]]
+LDA
+```
+
+```{python}
+LDA_final = Pipeline(
+  [("preprocessing", ct),
+  ("LDA", LinearDiscriminantAnalysis(n_components = None, 
+                                    solver = "svd"))
+                                    ]
+)
+```
+
+```{python}
+Final_LDA_Fit = LDA_final.fit(XSI, ySI)
+
+LDA_pred = Final_LDA_Fit.predict(XSI)
+```
+
+```{python}
+CM_plot_LDA = ConfusionMatrixDisplay(confusion_matrix(ySI, LDA_pred), 
+                                    display_labels=["Indica", "Sativa"])
+CM_plot_LDA.plot(cmap="Greens")
+plt.show
+```
+
+### Q2: QDA
+
+```{python}
+QDA_Pipe = Pipeline(
+  [("preprocessing", ct),
+  ("QDA", QuadraticDiscriminantAnalysis())]
+)
+
+param_grid_QDA = {
+    "QDA__reg_param": [0.01, 0.1, 0.5, 0.9],
+    "QDA__tol": [1e-4, 1e-3],
+}
+
+grid_QDA = GridSearchCV(QDA_Pipe, param_grid_QDA, cv = 5, scoring="accuracy")
+
+test_QDA_fit = grid_QDA.fit(XSI, ySI)
+```
+
+```{python}
+test_QDA_fit.best_params_
+```
+
+```{python}
+QDA = pd.DataFrame(grid_QDA.cv_results_)[["params", "mean_test_score"]]
+QDA
+```
+
+```{python}
+QDA_final = Pipeline(
+  [("preprocessing", ct),
+  ("QDA", QuadraticDiscriminantAnalysis(reg_param = 0.01,
+                                        tol = 0.0001))]
+)
+```
+
+```{python}
+Final_QDA_Fit = QDA_final.fit(XSI, ySI)
+
+QDA_pred = Final_QDA_Fit.predict(XSI)
+```
+
+```{python}
+print(classification_report(ySI, QDA_pred))
+```
+
+```{python}
+CM_plot_QDA = ConfusionMatrixDisplay(confusion_matrix(ySI, QDA_pred), 
+                                    display_labels=["Indica", "Sativa"])
+CM_plot_QDA.plot(cmap="Greens")
+plt.show
+```
+
+### Q3: SVC
+
+```{python}
+SVC_pipe = Pipeline(
+    [("preprocessing", ct),
+    ("SVC", SVC())]
+)
+
+param_grid_svc = {
+        "SVC__kernel": ["linear"],
+        "SVC__C": [0.1, 1, 10, 100]}
+
+
+grid_SVC = GridSearchCV(SVC_pipe, param_grid_svc, cv = 5, scoring="accuracy")
+
+test_SVC_fit = grid_SVC.fit(XSI, ySI)
+```
+
+```{python}
+test_SVC_fit.best_params_
+```
+
+```{python}
+SVC_Results = pd.DataFrame(grid_SVC.cv_results_)[["params", "mean_test_score"]]
+SVC_Results
+```
+
+```{python}
+SVC_Final = Pipeline(
+    [("preprocessing", ct),
+    ("SVC", SVC(C = 0.1, kernel = "linear"))]
+)
+```
+
+```{python}
+Final_SVC_Fit = SVC_Final.fit(XSI, ySI)
+
+SVC_pred = Final_SVC_Fit.predict(XSI)
+```
+
+```{python}
+CM_plot_SVC = ConfusionMatrixDisplay(confusion_matrix(ySI, SVC_pred), 
+                                    display_labels=["Indica", "Sativa"])
+CM_plot_SVC.plot(cmap="Greens")
+plt.show
+```
+
+### Q4: SVM
+
+```{python}
+SVM_Pipe = Pipeline(
+  [("preprocessing", ct),
+  ("SVM", SVC()  )]
+)
+
+param_grid_SVM = {
+        "SVM__kernel": ["rbf"],
+        "SVM__C": [0.1, 1, 10, 100]}
+
+grid_SVM = GridSearchCV(SVM_Pipe, param_grid_SVM, cv = 5, scoring="accuracy")
+
+test_SVM_fit = grid_SVM.fit(XSI, ySI)
+```
+
+```{python}
+test_SVM_fit.best_params_
+```
+
+```{python}
+SVM_Results = pd.DataFrame(grid_SVM.cv_results_)[["params", "mean_test_score"]]
+SVM_Results
+```
+
+```{python}
+SVM_Final = Pipeline(
+    [("preprocessing", ct),
+    ("SVM", SVC(C = 1, kernel = "rbf"))]
+)
+```
+
+```{python}
+Final_SVM_Fit = SVM_Final.fit(XSI, ySI)
+
+SVM_pred = Final_SVM_Fit.predict(XSI)
+```
+
+```{python}
+CM_plot_SVM = ConfusionMatrixDisplay(confusion_matrix(ySI, SVM_pred), 
+                                    display_labels=["Indica", "Sativa"])
+CM_plot_SVM.plot(cmap="Greens")
+plt.show
+```
+
+### Comparison
+
+```{python}
+LDA_tbl = LDA[["params", "mean_test_score"]].copy()
+LDA_tbl["model"] = "LDA"
+
+QDA_tbl = QDA[["params", "mean_test_score"]].copy()
+QDA_tbl["model"] = "QDA"
+
+SVC_tbl = SVC_Results[["params", "mean_test_score"]].copy()
+SVC_tbl["model"] = "SVC"
+
+SVM_tbl = SVM_Results[["params", "mean_test_score"]].copy()
+SVM_tbl["model"] = "SVM"
+```
+
+```{python}
+p1_models = pd.concat([LDA_tbl, QDA_tbl, SVC_tbl, SVM_tbl],
+                      ignore_index=True)
+p1_models
+```
+
+```{python}
+p1_models.loc[p1_models["mean_test_score"].idxmax()]
+```
+
+For the binary classification models it appears that the QDA performed the best in terms of accuracy in showing the type of cannabis based on our predictor variables with the highest mean test score of 0.866123, with SVC coming in close behind with .866109, showing just how well all of the model performed when prediction type.
+
+## Part Two: Natural Multiclass
+
+```{python}
+X_all = weed_clean.drop(["Type", "Strain", "Effects", "Flavor"], axis = 1)
+y_all = weed_clean["Type"]
+```
+
+### Q1
+
+```{python}
+Tree_pipe = Pipeline(
+  [("preprocessing", ct),
+  ("Tree", DecisionTreeClassifier())]
+)
+
+param_grid_Tree = {
+    "Tree__max_depth": [None, 3, 5, 8, 12],
+    "Tree__min_samples_split": [2, 5, 10, 20],
+    "Tree__min_samples_leaf": [1, 2, 5, 10],
+    "Tree__splitter": ["best", "random"],
+    "Tree__ccp_alpha": [0.0, 0.0005, 0.001, 0.005]  
+}
+
+
+cv = KFold(n_splits=5, shuffle=True, random_state=42)
+```
+
+```{python}
+tree_gs = GridSearchCV(Tree_pipe, param_grid_Tree, cv=cv, scoring = "accuracy", n_jobs = -1)
+
+test_tree = tree_gs.fit(X_all, y_all)
+test_tree.best_params_
+```
+
+```{python}
+Tree_Results = pd.DataFrame(test_tree.cv_results_)[["params", "mean_test_score"]]
+```
+
+```{python}
+Tree_Final = Pipeline(
+  [("preprocessing", ct),
+  ("Tree", DecisionTreeClassifier(ccp_alpha = 0.0, max_depth=3, min_samples_leaf=10,
+                                    min_samples_split=2, splitter="random"))]
+)
+```
+
+```{python}
+Tree_Final_Fit = Tree_Final.fit(X_all, y_all)
+
+Tree_pred = Tree_Final_Fit.predict(X_all)
+Tree_Final_Fit.classes_
+```
+
+```{python}
+plt.figure(figsize=(20, 12), dpi=150)  
+plot_tree(
+    Tree_Final_Fit.named_steps["Tree"],              
+    feature_names=Tree_Final_Fit.feature_names_in_,
+    class_names= Tree_Final_Fit.classes_,
+    filled=True,
+    rounded=True,
+    fontsize=10
+)
+plt.tight_layout()
+plt.show()
+```
+
+Interperting our tree shows that the root split is by the feature sleepy and splits up the classes with left being mostly hybrid and some sativa and the right being indica versus hybrid. Sleepy is the most significant in determining the type for this dataset.
+
+### Q2
+
+```{python}
+def Build_and_Test_Pipeline (pipeline_name, params,
+                             model_name, model_sklearn, X, y):
+
+    pipeline_name = Pipeline(
+       [("preprocessing", ct),
+        (model_name, model_sklearn)]
+    )   
+
+    grid = GridSearchCV(pipeline_name, params, cv = 5, scoring = "accuracy")
+    fit = grid.fit(X, y)
+    print(pd.DataFrame(fit.cv_results_)[["params", "mean_test_score"]])
+    return (fit.best_params_)
+
+
+def Final_Pipeline_and_Plot(pipeline_name, model_name, model_sklearn, X,y):
+
+    pipeline_name = Pipeline(
+        [("preprocessing", ct),
+        (model_name, model_sklearn)]
+    )
+
+    fit = pipeline_name.fit(X,y)
+    pred = fit.predict(X)
+
+    CM_plot = ConfusionMatrixDisplay(confusion_matrix(y, pred), 
+                                    display_labels=["Hybrid","Indica", "Sativa"])
+    CM_plot.plot(cmap="Greens")
+    return(plt.show)
+```
+
+### LDA
+
+```{python}
+Build_and_Test_Pipeline("LDA2_pipe", param_grid_LDA, "LDA", LinearDiscriminantAnalysis(), X_all, y_all)
+```
+
+```{python}
+Final_Pipeline_and_Plot("Final_LDA2", "LDA", LinearDiscriminantAnalysis(
+n_components= None, solver= "svd"), X_all, y_all
+)
+```
+
+### QDA
+
+```{python}
+Build_and_Test_Pipeline("QDA2_pipe", param_grid_QDA, "QDA", QuadraticDiscriminantAnalysis(), X_all, y_all)
+```
+
+```{python}
+Final_Pipeline_and_Plot("Final_QDA2", "QDA", QuadraticDiscriminantAnalysis(
+    reg_param= 0.5, tol = 0.0001
+), X_all, y_all)
+```
+
+### KNN
+
+```{python}
+param_grid_knn = {
+    "KNN__n_neighbors": range(1,100)}
+```
+
+```{python}
+Build_and_Test_Pipeline("KNN_pipe", param_grid_knn, "KNN", KNeighborsClassifier(), X_all, y_all)
+```
+
+```{python}
+Final_Pipeline_and_Plot("Finall_KNN", "KNN", KNeighborsClassifier(n_neighbors=39), X_all, y_all)
+```
+
+### Q3
+
+The metrics performed worse than in part one which likely has to do with adding another variable to try and predict is a lot harder on the model versus only 2 variables needed to predict for. The sativa category was the most mistaken and this is most likely due to fewer overall rows in the dataset for sativa making it harder to predict for leading to confusion throughout the models.
+
+## Part Three: Multiclass from Binary
+
+```{python}
+weed_clean["Type_S"] = np.where(weed_clean["Type"] == "sativa", 1, 0)
+weed_clean["Type_I"] = np.where(weed_clean["Type"] == "indica", 1, 0)
+weed_clean["Type_H"] = np.where(weed_clean["Type"] == "hybrid", 1, 0)
+```
+
+### Q1: OVR Modeling
+
+```{python}
+pipeOvr_Log = Pipeline(
+  [("preprocessing", ct),
+  ("ovr",OneVsRestClassifier(LogisticRegression(max_iter=5000)))]
+  )
+
+pipeOvr_SVC = Pipeline(
+  [("preprocessing", ct),
+  ("ovr",OneVsRestClassifier(SVC(C = 1, kernel = "rbf")))]
+  )
+```
+
+```{python}
+X_2 = weed_clean.drop(["Type", "Type_S", "Type_I", "Type_H"], axis = 1)
+
+comp = []
+```
+
+#### Indica
+
+```{python}
+y_i = weed_clean["Type_I"]
+```
+
+```{python}
+score_LR1 = cross_val_score(
+        estimator=pipeOvr_Log,
+        X=X_2,
+        y=y_i,
+        cv=cv,
+        scoring="f1_macro",
+        n_jobs=-1
+    )
+
+
+comp.append({"model" : "Log_Reg", "Type" : "indica", "F1_mean": score_LR1.mean(),
+ "F1_std": score_LR1.std()})
+```
+
+```{python}
+score_SVC1 = cross_val_score(
+        estimator=pipeOvr_SVC,
+        X=X_2,
+        y=y_i,
+        cv=cv,
+        scoring="f1_macro",
+        n_jobs=-1
+    )
+
+
+comp.append({"model" : "SVC", "Type" : "indica", "F1_mean": score_SVC1.mean(),
+ "F1_std": score_SVC1.std()})
+```
+
+#### Sativa
+
+```{python}
+y_s = weed_clean["Type_S"]
+```
+
+```{python}
+score_LR2 = cross_val_score(
+        estimator=pipeOvr_Log,
+        X=X_2,
+        y=y_s,
+        cv=cv,
+        scoring="f1_macro",
+        n_jobs=-1
+    )
+
+
+comp.append({"model" : "Log_Reg", "Type" : "sativa", "F1_mean": score_LR2.mean(),
+ "F1_std": score_LR2.std()})
+```
+
+```{python}
+score_SVC2 = cross_val_score(
+        estimator=pipeOvr_SVC,
+        X=X_2,
+        y=y_s,
+        cv=cv,
+        scoring="f1_macro",
+        n_jobs=-1
+    )
+
+
+comp.append({"model" : "SVC", "Type" : "sativa", "F1_mean": score_SVC2.mean(),
+ "F1_std": score_SVC2.std()})
+```
+
+#### Hybrid
+
+```{python}
+y_h = weed_clean["Type_H"]
+```
+
+```{python}
+score_LR3 = cross_val_score(
+        estimator=pipeOvr_Log,
+        X=X_2,
+        y=y_h,
+        cv=cv,
+        scoring="f1_macro",
+        n_jobs=-1
+    )
+
+
+comp.append({"model" : "Log_Reg", "Type" : "hybrid", "F1_mean": score_LR3.mean(),
+ "F1_std": score_LR3.std()})
+```
+
+```{python}
+score_SVC3 = cross_val_score(
+        estimator=pipeOvr_SVC,
+        X=X_2,
+        y=y_h,
+        cv=cv,
+        scoring="f1_macro",
+        n_jobs=-1
+    )
+
+
+comp.append({"model" : "SVC", "Type" : "hybrid", "F1_mean": score_SVC3.mean(),
+ "F1_std": score_SVC3.std()})
+```
+
+### Q2
+
+```{python}
+ovr_data = pd.DataFrame(comp)
+ovr_data
+```
+
+The model that performed the best was the indica svc model and the model that performed the worst was the sativa svc model. this makes sense as their was a good amount of data to provide for indica versus sativa did not have as much data, making it easier to distinguish. Hybrid is also a mix between indica and sativa which makes it harder to tell apart so it makes sense to have indica and sativa at opposite ends of the spectrum.
+
+### Q3
+
+```{python}
+OvO_coll = []
+```
+
+```{python}
+# Use SVC Final Pipeline
+
+log_reg = Pipeline(
+    [("preprocessing", ct),
+  ("log", LogisticRegression(max_iter=5000))]
+  )
+```
+
+#### Indica vs. Sativa
+
+```{python}
+i_vs_s = weed_clean[(weed_clean["Type"] == "indica") | (weed_clean["Type"] == "sativa")]
+
+X_I_S = i_vs_s.drop(["Type", "Strain", "Effects", "Flavor", "Type_S", "Type_H", "Type_I"], axis = 1)
+y_I_S = i_vs_s["Type"]
+```
+
+```{python}
+fit_log_I_S = log_reg.fit(X_I_S, y_I_S)
+
+fit_SVC_I_S = SVC_Final.fit(X_I_S, y_I_S)
+```
+
+```{python}
+#Logistic Regression
+
+s1 = cross_val_score(fit_log_I_S, X_I_S, y_I_S, cv = cv, scoring= "roc_auc")
+
+OvO_coll.append({"model" : "Log_Reg", "Type" : "I_vs_S", "roc_mean": s1.mean(),
+ "roc_std": s1.std()})
+```
+
+```{python}
+#SVC
+
+s2 = cross_val_score(fit_SVC_I_S, X_I_S, y_I_S, cv = cv, scoring= "roc_auc")
+
+OvO_coll.append({"model" : "SVC", "Type" : "I_vs_S", "roc_mean": s2.mean(),
+ "roc_std": s2.std()})
+```
+
+#### Indica vs. Hybrid
+
+```{python}
+i_vs_h = weed_clean[(weed_clean["Type"] == "indica") | (weed_clean["Type"] == "hybrid")]
+
+X_I_H = i_vs_h.drop(["Type", "Strain", "Effects", "Flavor", "Type_S", "Type_H", "Type_I"], axis = 1)
+y_I_H = i_vs_h["Type"]
+```
+
+```{python}
+fit_log_I_H = log_reg.fit(X_I_H, y_I_H)
+
+fit_SVC_I_H = SVC_Final.fit(X_I_H, y_I_H)
+```
+
+```{python}
+#Logistic Regression
+
+s3 = cross_val_score(fit_log_I_H, X_I_H, y_I_H, cv = cv, scoring= "roc_auc")
+
+OvO_coll.append({"model" : "Log_Reg", "Type" : "I_vs_H", "roc_mean": s3.mean(),
+ "roc_std": s3.std()})
+```
+
+```{python}
+#SVC
+
+s4 = cross_val_score(fit_SVC_I_H, X_I_H, y_I_H, cv = cv, scoring= "roc_auc")
+
+OvO_coll.append({"model" : "SVC", "Type" : "I_vs_H", "roc_mean": s4.mean(),
+ "roc_std": s4.std()})
+```
+
+#### Hybrid vs. Sativa
+
+```{python}
+h_vs_s = weed_clean[(weed_clean["Type"] == "hybrid") | (weed_clean["Type"] == "sativa")]
+
+X_H_S= h_vs_s.drop(["Type", "Strain", "Effects", "Flavor", "Type_S", "Type_H", "Type_I"], axis = 1)
+y_H_S = h_vs_s["Type"]
+```
+
+```{python}
+fit_log_H_S = log_reg.fit(X_H_S, y_H_S)
+
+fit_SVC_H_S = SVC_Final.fit(X_H_S, y_H_S)
+```
+
+```{python}
+#Logistic Regression
+
+s5 = cross_val_score(fit_log_H_S, X_H_S, y_H_S, cv = cv, scoring= "roc_auc")
+
+OvO_coll.append({"model" : "Log_Reg", "Type" : "H_vs_S", "roc_mean": s5.mean(),
+ "roc_std": s5.std()})
+```
+
+```{python}
+#SVC
+
+s6 = cross_val_score(fit_SVC_H_S, X_H_S, y_H_S, cv = cv, scoring= "roc_auc")
+
+OvO_coll.append({"model" : "SVC", "Type" : "H_vs_S", "roc_mean": s6.mean(),
+ "roc_std": s6.std()})
+```
+
+### Q4
+
+```{python}
+OvO_data = pd.DataFrame(OvO_coll)
+OvO_data
+```
+
+The Model that performed the best was the SVC model for indica versus sativa, and the one that performed the worst was the SVC for Hybrid Versus sativa. This makes sense as it aligns with the previous models earlier in this part which demonstrated how it is eaier to make a distinction between indica and sativa and is hard to differentiate between hybrid and the strains. Goin on what we know about cannabis these results align as they show that hybrid tends to mix elements of sativa or hybrid in the strain making it less unique than the pure forms of sativa or indica.
+
+### Q5
+
+After reading sklearns documentation if we were to test the whole dataset using logistic regression and not specify, the model would perform ovo as the auto function looks through the data to determine if it is binary or multinomial and the entire dataframe here would be multinomial.
