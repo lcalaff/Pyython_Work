@@ -1,0 +1,555 @@
+---
+title: "Housing Regression Predictions Report"
+author: Lucas Calaff
+format: 
+  dashboard:
+    theme: yeti
+    nav-buttons:
+      - icon: github
+        href: https://github.com/lcalaff/Pyython_Work
+---
+
+```{python}
+#| echo: false
+#| include: false
+
+import pandas as pd
+import numpy as np
+import plotnine as p9
+import matplotlib.pyplot as plt
+
+from sklearn.pipeline import Pipeline
+from sklearn.compose import make_column_selector, ColumnTransformer
+from sklearn.preprocessing import StandardScaler, OneHotEncoder, PolynomialFeatures
+from sklearn.linear_model import LinearRegression, LogisticRegression, Ridge, Lasso,ElasticNet
+from sklearn.neighbors import KNeighborsRegressor, KNeighborsClassifier
+from sklearn.model_selection import train_test_split, cross_val_score, GridSearchCV, KFold
+from sklearn.metrics import r2_score, classification_report, accuracy_score
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay, roc_curve, auc
+from sklearn.metrics import  precision_score, recall_score, roc_auc_score, cohen_kappa_score
+from sklearn.metrics._regression import mean_squared_error
+from sklearn.feature_selection import SelectFromModel
+from sklearn.tree import DecisionTreeClassifier, plot_tree, DecisionTreeRegressor
+from sklearn.inspection import permutation_importance
+
+
+AME_train = pd.read_csv(r"C:\Users\ldcal\OneDrive\Desktop\Cal Poly Courses\Fall\GSB-S544\Coding Work\Pyython_Work\Kaggle_Comp\Kaggle_Regression\train_new.csv")
+AME_test = pd.read_csv(r"C:\Users\ldcal\OneDrive\Desktop\Cal Poly Courses\Fall\GSB-S544\Coding Work\Pyython_Work\Kaggle_Comp\Kaggle_Regression\test_new.csv")
+
+# Looking at the string variables to see how many unique values they have
+
+for x in ["Street", "Neighborhood", "Bldg Type", "House Style",
+            "Roof Style", "Heating", "Electrical", "Functional", "Sale Type"]:
+
+    print(AME_train[x].unique())
+
+(p9.ggplot(AME_train, p9.aes("Gr Liv Area", "SalePrice", fill = "Bldg Type"))
++p9.labs(title = "AME Housing Starting Chart", caption = "Training Data")
++p9.geom_point())
+
+AME_train.isna().sum().sort_values(ascending=False)
+
+AME_train.corr(numeric_only=True)
+
+ct = ColumnTransformer(
+    [("num", StandardScaler(), make_column_selector(dtype_include=np.number)),
+    ("cat", OneHotEncoder(handle_unknown="ignore", sparse_output = False)
+    , make_column_selector(dtype_exclude=np.number)),  
+    ], 
+    remainder = "drop" 
+
+).set_output(transform = "pandas" ,)
+
+def Build_and_Test_Pipeline (pipeline_name,params,
+                             model_name, model_sklearn, X, y):
+
+    pipeline_name = Pipeline(
+       [("preprocessing", ct),
+        (model_name, model_sklearn)]
+    )   
+
+    grid = GridSearchCV(pipeline_name, params, cv = 5, scoring = "neg_root_mean_squared_error")
+    fit = grid.fit(X, y)
+    print(pd.DataFrame(fit.cv_results_)[["params", "mean_test_score"]])
+    return (fit.best_params_)
+
+
+def Final_Fit_and_RSME (pipeline_name, model_name, model_sklearn, X_training,
+                         y_training, X_test, y_test, data):
+    
+    pipeline_name = Pipeline(
+     [("preprocessing", ct),
+        (model_name, model_sklearn)]
+    )
+
+    pipeline_name.fit(X_training, y_training)
+    pred = pipeline_name.predict(X_test)
+    RSME = np.sqrt(mean_squared_error(y_test, pred))
+
+    data.append({"Model Name" : model_name, 
+                        "RMSE" : RSME})
+    return(RSME)
+
+AME_train_d_nan = AME_train.dropna()
+AME_train_d_nan = AME_train_d_nan.drop(["PID"], axis = 1)
+
+X1 = AME_train_d_nan.drop(columns=["SalePrice"])
+y = AME_train_d_nan["SalePrice"]
+y_log = np.log(y)
+
+Part2_results = []
+
+X_train1, X_valid1, y_train_log1, y_valid_log1 = train_test_split(
+    X1, y_log, test_size=0.25, random_state=42
+)
+
+LM_pipe = Pipeline(
+       [("preprocessing", ct),
+        ("LM", LinearRegression())]
+)  
+
+LM_pipe.fit(X_train1, y_train_log1)
+LM_pred_valid = LM_pipe.predict(X_valid1)
+
+LM_RMSE1 = np.sqrt(mean_squared_error(y_valid_log1, LM_pred_valid))
+
+Part2_results.append({"Model Name" : "LM", 
+                        "RMSE" : LM_RMSE1})
+
+alphas_tune = {"ridge__alpha": [1,2,3,4,5, 6,7]}
+
+Build_and_Test_Pipeline("ridge_pipe", alphas_tune, "ridge", Ridge(), X_train1, y_train_log1)
+
+Final_Fit_and_RSME("Ridge_Final", "Ridge", Ridge(alpha = 5),
+                        X_train1, y_train_log1, X_valid1, y_valid_log1, Part2_results)
+
+alphas_tune2 = {"Lasso__alpha": [0.0001, 0.0002, 0.00025 ,0.0003, 0.0004]}
+
+Build_and_Test_Pipeline("Lasso_model", alphas_tune2,"Lasso", Lasso(), X_train1, y_train_log1)
+
+Final_Fit_and_RSME("Lasso_Final", "Lasso", Lasso(alpha = 0.00025),
+                        X_train1, y_train_log1, X_valid1, y_valid_log1, Part2_results)
+
+param_grid_EN = {
+    "EN__alpha":    [0.0003, 0.0006],
+    "EN__l1_ratio": [0.5],
+    "EN__max_iter": [2000, 5000, 10000],
+}
+
+Build_and_Test_Pipeline("EN_pipe", param_grid_EN, "EN", ElasticNet(), X_train1, y_train_log1)
+
+Final_Fit_and_RSME("EN_Final", "EN", ElasticNet(alpha = 0.00025, l1_ratio = 0.5, max_iter=2000),
+                        X_train1, y_train_log1, X_valid1, y_valid_log1, Part2_results)
+
+param_grid_tree = {
+    "tree__max_depth": [None, 3, 5, 8, 12],
+    "tree__min_samples_split": [2, 5, 10, 20],
+    "tree__min_samples_leaf": [1, 2, 5, 10],
+}
+
+Build_and_Test_Pipeline("Tree_pipe", param_grid_tree, "tree", DecisionTreeRegressor(), X_train1, y_train_log1)
+
+Final_Fit_and_RSME("Tree_Final", "Tree", DecisionTreeRegressor(max_depth=8, min_samples_leaf=10, min_samples_split=10),
+                        X_train1, y_train_log1, X_valid1, y_valid_log1, Part2_results)
+
+param_grid_knn = {
+    "KNN__n_neighbors": range(1,10)}
+
+Build_and_Test_Pipeline("KNN_pipe", param_grid_knn, "KNN", KNeighborsRegressor(), X_train1, y_train_log1)
+
+Final_Fit_and_RSME("Final_KNN", "KNN", KNeighborsRegressor(n_neighbors=8), X_train1, y_train_log1,
+                        X_valid1, y_valid_log1, Part2_results)
+
+df2 = pd.DataFrame(Part2_results)
+df2
+
+X2 = AME_train_d_nan.drop(["SalePrice", "Street", "House Style", "Overall Cond",
+                             "Roof Style", "Yr Sold", "Sale Type"],
+                            axis = 1)
+
+Part3_results = []
+
+X_train2, X_valid2, y_train_log2, y_valid_log2 = train_test_split(
+    X2, y_log, test_size=0.25, random_state=42
+)
+
+LM_pipe2 = Pipeline(
+       [("preprocessing", ct),
+        ("LM", LinearRegression())]
+)  
+
+LM_pipe2.fit(X_train2, y_train_log2)
+LM_pred_valid2 = LM_pipe2.predict(X_valid2)
+
+LM_RMSE2 = np.sqrt(mean_squared_error(y_valid_log2, LM_pred_valid2))
+
+Part3_results.append({"Model Name" : "LM", 
+                        "RMSE" : LM_RMSE2})
+
+param_Ridge_tune = {"ridge__alpha": [1,2,5, 10,20,50]}
+
+Build_and_Test_Pipeline("Ridge_pipe2", param_Ridge_tune, "ridge",Ridge(), X_train2, y_train_log2)
+
+Final_Fit_and_RSME("Final_Ridge2", "Ridge", Ridge(alpha=2), X_train2, y_train_log2,
+                    X_valid2, y_valid_log2, Part3_results)
+
+Param_Lasso_tune = {"Lasso__alpha": [0.00001,0.0001,0.00025, 0.0003]}
+Build_and_Test_Pipeline("Lasso_Pipe2", Param_Lasso_tune, "Lasso", Lasso(), X_train2, y_train_log2)
+
+Final_Fit_and_RSME("Final_Lasso2", "Lasso", Lasso(alpha = 0.00025), X_train2, y_train_log2,
+                    X_valid2, y_valid_log2, Part3_results)
+
+param_grid_EN2 = {
+    "EN__alpha": [0.0001, 0.001, 0.01, 0.1, 1.0, 10.0],   # strength of regularization
+    "EN__l1_ratio": [0.1, 0.3, 0.5, 0.7, 0.9],           # 0 = ridge, 1 = lasso
+    "EN__max_iter": [1000, 5000, 10000],                 # allow convergence
+}
+
+Build_and_Test_Pipeline("EN_Pipe", param_grid_EN2, "EN", ElasticNet(), X_train2, y_train_log2)
+
+Final_Fit_and_RSME("EN_Pipe2", "EN", ElasticNet(alpha = 0.0001, l1_ratio= 0.9, max_iter=1000), 
+                    X_train2, y_train_log2, X_valid2, y_valid_log2, Part3_results)
+
+param_grid_tree2 = {
+    "tree__max_depth": [None, 3, 5, 8, 12],
+    "tree__min_samples_split": [2, 5, 10, 20],
+    "tree__min_samples_leaf": [1, 2, 5, 10],
+}
+
+Build_and_Test_Pipeline("Tree_pipe2", param_grid_tree2, "tree", DecisionTreeRegressor(),
+                         X_train2, y_train_log2)
+
+Final_Fit_and_RSME("Tree_Final2", "Tree", DecisionTreeRegressor(max_depth = 8, min_samples_leaf =10, min_samples_split = 5 ),
+                    X_train2, y_train_log2, X_valid2, y_valid_log2, Part3_results)
+
+param_grid_knn2 = {
+    "KNN__n_neighbors": [5,10,12,15,20,50]}
+
+Build_and_Test_Pipeline("KNN_pipe2", param_grid_knn2, "KNN", KNeighborsRegressor(), X_train2, y_train_log2)
+
+Final_Fit_and_RSME("KNN_Pipe2", "KNN", KNeighborsRegressor(n_neighbors=10), 
+                    X_train2, y_train_log2, X_valid2, y_valid_log2, Part3_results)
+
+df3 = pd.DataFrame(Part3_results)
+df3
+
+# Selectors (you can also pass explicit lists of column names)
+numeric_features = make_column_selector(dtype_include=["int64", "float64"])
+categorical_features = make_column_selector(dtype_include=["object", "category"])
+
+# Pipeline just for numeric part: scale -> poly
+num_poly = Pipeline([
+    ("scaler", StandardScaler()),
+    ("poly", PolynomialFeatures(degree=2, include_bias=False))  # degree=2 to start
+])
+
+# ColumnTransformer: numeric gets num_poly, categoricals get one-hot
+ct_poly = ColumnTransformer(
+    transformers=[
+        ("num", num_poly, numeric_features),
+        ("cat", OneHotEncoder(handle_unknown="ignore"), categorical_features),
+    ],
+    remainder="drop"
+)
+
+PolyLM_pipe = Pipeline(
+    [
+        ("preprocessing", ct_poly),
+        ("LM", LinearRegression())
+    ]
+)
+
+param_grid_poly = {
+    "preprocessing__num__poly__degree": [1, 2, 3,4,5],  # 1 = plain linear
+}
+
+grid_poly = GridSearchCV(
+    PolyLM_pipe,
+    param_grid=param_grid_poly,
+    cv=5,
+    scoring="neg_root_mean_squared_error"
+)
+
+grid_poly.fit(X_train1, y_train_log1)
+print("Best params:", grid_poly.best_params_)
+print("Best log-RMSE:", -grid_poly.best_score_)
+
+best_poly = grid_poly.best_estimator_
+
+poly_pred_valid = best_poly.predict(X_valid1)
+poly_RMSE = np.sqrt(mean_squared_error(y_valid_log1, poly_pred_valid))
+
+part4_data = []
+
+part4_data.append({"Model Name" : "Poly", 
+                        "RMSE" : poly_RMSE})
+df4 = pd.DataFrame(part4_data)
+df4
+
+num_pipe = Pipeline([
+    ("scaler", StandardScaler()),
+    ("interact", PolynomialFeatures(
+        degree=2,
+        interaction_only=True,
+        include_bias=False
+    )),
+])
+
+ct_interact = ColumnTransformer(
+    transformers=[
+        ("num", num_pipe, numeric_features),
+        ("cat", OneHotEncoder(handle_unknown="ignore"), categorical_features),
+    ],
+    remainder="drop"
+)
+
+def Build_and_Test_inter_pipe (pipeline_name,params,
+                             model_name, model_sklearn, X, y):
+
+    pipeline_name = Pipeline(
+       [("preprocessing", ct_interact),
+        (model_name, model_sklearn)]
+    )   
+
+    grid = GridSearchCV(pipeline_name, params, cv = 5, scoring = "neg_root_mean_squared_error")
+    fit = grid.fit(X, y)
+    print(pd.DataFrame(fit.cv_results_)[["params", "mean_test_score"]])
+    return (fit.best_params_)
+
+
+
+
+def Final_Fit_Inter_and_RSME (pipeline_name, model_name, model_sklearn, X_training,
+                         y_training, X_test, y_test, data):
+    
+    pipeline_name = Pipeline(
+     [("preprocessing", ct_interact),
+        (model_name, model_sklearn)]
+    )
+
+    pipeline_name.fit(X_training, y_training)
+    pred = pipeline_name.predict(X_test)
+    RSME = np.sqrt(mean_squared_error(y_test, pred))
+
+    data.append({"Model Name" : model_name, 
+                        "RMSE" : RSME})
+    return(RSME)
+
+Part5_Results = []
+
+LM_Inter_Pipe = Pipeline(
+    [("preprocessing", ct_interact), 
+     ("LM", LinearRegression())]
+)
+
+LM_Inter_Pipe.fit(X_train1, y_train_log1)
+LM_Inter_pred_valid = LM_Inter_Pipe.predict(X_valid1)
+
+LM_Inter_RMSE = np.sqrt(mean_squared_error(y_valid_log1, LM_Inter_pred_valid))
+
+Part5_Results.append({"Model Name" : "LM", 
+                        "RMSE" : LM_Inter_RMSE})
+
+param_Inter_EN = {
+    "EN__alpha":    [0.0003, 0.00045, 0.0006, 0.0008, 0.001],
+    "EN__l1_ratio": [ 0.5, 0.6, 0.7,0.8,0.9],
+    "EN__max_iter": [5000, 10000],   
+}
+
+Build_and_Test_inter_pipe("EN_Inter_Pipe", param_Inter_EN, "EN", ElasticNet(), X_train1, y_train_log1)
+
+Final_Fit_Inter_and_RSME("EN_Inter_Final", "EN", ElasticNet(alpha = 0.00045, l1_ratio = 0.9, max_iter=5000),
+                        X_train1, y_train_log1, X_valid1, y_valid_log1, Part5_Results)
+
+df5 = pd.DataFrame(Part5_Results)
+df5
+
+AllData = df2[["Model Name", "RMSE"]].copy()
+AllData["Data_Type"] = "All"
+
+Selected = df3[["Model Name", "RMSE"]].copy()
+Selected["Data_Type"] = "Select"
+
+Poly = df4[["Model Name", "RMSE"]].copy()
+Poly["Data_Type"] = "Poly"
+
+Inter = df5[["Model Name", "RMSE"]].copy()
+Inter["Data_Type"] = "Inter"
+
+Regression_Models_Scores = pd.concat([AllData, Selected, Poly, Inter], ignore_index= True)
+
+Regression_Models_Scores
+
+X_test = AME_test.drop("PID", axis = 1)
+
+Final_Pipeline = Pipeline(
+    [("Preprocessing", ct_interact), 
+     ("EN", ElasticNet(alpha = 0.00045, l1_ratio = 0.9, max_iter=5000))
+     ]
+    )
+
+Final_Pipeline.fit(X_train1, y_train_log1)
+
+test_pred_log = Final_Pipeline.predict(X_test)
+
+test_pred = np.exp(test_pred_log)
+
+plt.figure(figsize=(10, 4))
+
+plt.subplot(1, 2, 1)
+plt.hist(AME_train["SalePrice"], bins=40)
+plt.title("Train: Actual SalePrice")
+plt.xlabel("SalePrice")
+
+plt.subplot(1, 2, 2)
+plt.hist(test_pred, bins=40)
+plt.title("Test: Predicted SalePrice")
+plt.xlabel("SalePrice")
+
+plt.tight_layout()
+
+
+submission = pd.DataFrame({
+    "PID": AME_test["PID"].values, 
+    "SalePrice": test_pred
+})
+
+```
+
+# Page 1
+
+```{python}
+#| echo: false
+#| include: false
+
+best_rmse  = float(Regression_Models_Scores["RMSE"].min())
+worst_rmse = float(Regression_Models_Scores["RMSE"].max())
+avg_rmse   = float(Regression_Models_Scores["RMSE"].mean())
+```
+
+
+## Row {height="25%"}
+
+```{python}
+#| content: valuebox
+#| title: "Best RMSE"
+#| icon: trophy
+#| color: success
+#| value-box-compact: true
+
+round(best_rmse, 4)
+
+```
+
+```{python}
+#| content: valuebox
+#| title: "Average RMSE"
+#| icon: bar-chart
+#| color: primary 
+#| value-box-compact: true
+
+round(avg_rmse, 4)
+
+```
+
+```{python}
+#| content: valuebox
+#| title: "Worst RMSE"
+#| icon: x-circle
+#| color: dark
+#| value-box-compact: true
+
+round(worst_rmse, 4)
+
+```
+
+## Row {height="25%"}
+
+```{python}
+#| echo: false
+#| include: false
+
+RMSE_Type = Regression_Models_Scores.groupby("Data_Type", as_index=False)["RMSE"].mean()
+
+avg_all = float(RMSE_Type.loc[RMSE_Type["Data_Type"] == "All", "RMSE"].iloc[0])
+avg_select = float(RMSE_Type.loc[RMSE_Type["Data_Type"] == "Select", "RMSE"].iloc[0])
+avg_poly = float(RMSE_Type.loc[RMSE_Type["Data_Type"] == "Poly", "RMSE"].iloc[0])
+avg_Inter = float(RMSE_Type.loc[RMSE_Type["Data_Type"] == "Inter", "RMSE"].iloc[0])
+```
+
+
+```{python}
+#| content: valuebox
+#| title: "All Features"
+#| icon: grid-3x3
+#| color: light
+#| value-box-compact: true
+
+round(avg_all, 4)
+```
+
+```{python}
+#| content: valuebox
+#| title: "Selected Features"
+#| icon: funnel
+#| color: light
+#| value-box-compact: true
+
+round(avg_select, 4)
+
+```
+
+```{python}
+#| content: valuebox
+#| title: "Polynomial Features"
+#| icon: hexagon
+#| color: info
+#| value-box-compact: true
+
+round(avg_poly, 4)
+
+```
+
+```{python}
+#| content: valuebox
+#| title: "Interactions"
+#| icon: shuffle
+#| color: info
+#| value-box-compact: true
+
+round(avg_Inter, 4)
+
+```
+
+## Row {height="50%"}
+
+```{python}
+#| echo: false
+#| warning: false
+#| width: 60%        
+
+fig, axes = plt.subplots(1, 2, figsize=(12, 4))
+
+_ = axes[0].hist(AME_train["SalePrice"], bins=40)
+_ = axes[0].set_title("Train: Actual SalePrice", fontsize=12)
+_ = axes[0].set_xlabel("SalePrice", fontsize=10)
+_ = axes[0].set_ylabel("Count", fontsize=10)
+
+
+_ = axes[1].hist(test_pred, bins=40)
+_ = axes[1].set_title("Test: Predicted SalePrice", fontsize=12)
+_ = axes[1].set_xlabel("SalePrice", fontsize=10)
+_ = axes[1].set_ylabel("Count", fontsize=10)
+
+_ = plt.tight_layout()
+_ = plt.show()
+
+```
+
+```{python}
+#| width: 40%
+#| tbl-cap: "All Model RMSE Scores"
+#| df-print: paged
+
+Regression_Models_Scores.sort_values(by = "RMSE")
+```
