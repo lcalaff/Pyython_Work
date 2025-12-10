@@ -6,7 +6,7 @@ format:
     theme: yeti
     nav-buttons:
       - icon: github
-        href: https://github.com
+        href: https://github.com/lcalaff/Pyython_Work/tree/main/Kaggle_Comp/Kaggle_Class
 ---
 
 
