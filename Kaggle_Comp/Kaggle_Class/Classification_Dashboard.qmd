@@ -7,6 +7,9 @@ format:
     nav-buttons:
       - icon: github
         href: https://github.com/lcalaff/Pyython_Work/tree/main/Kaggle_Comp/Kaggle_Class
+    embed-resources: true
+execute:
+  enabled: true
 ---
 
 
