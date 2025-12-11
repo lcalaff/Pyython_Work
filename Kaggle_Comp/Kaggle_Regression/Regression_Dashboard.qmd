@@ -7,6 +7,9 @@ format:
     nav-buttons:
       - icon: github
         href: https://github.com/lcalaff/Pyython_Work/tree/main/Kaggle_Comp/Kaggle_Regression
+    embed-resources: true
+execute:
+  enabled: true
 ---
 
 ```{python}
